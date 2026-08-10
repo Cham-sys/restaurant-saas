@@ -22,4 +22,37 @@ class ThemeHelper
         $themePath = self::getThemePath($restaurant);
         return "themes.{$themePath}.{$viewName}";
     }
+     /**
+     * جلب قيمة متغير الثيم
+     */
+    public static function getVar(string $key, $default = null)
+    {
+        $restaurant = self::getCurrentRestaurant();
+        
+        if (!$restaurant) {
+            return $default;
+        }
+
+        $settings = $restaurant->getThemeSettings();
+        
+        return $settings[$key] ?? $default;
+    }
+
+    /**
+     * جلب المطعم الحالي (من الـ Auth أو من الـ Route)
+     */
+    private static function getCurrentRestaurant(): ?Restaurant
+    {
+        // إذا كان المستخدم مسجل دخول (لوحة التحكم)
+        if (Auth::check() && Auth::user()->restaurant) {
+            return Auth::user()->restaurant;
+        }
+
+        // إذا كان في واجهة الزبون (من الـ Route)
+        if (request()->route()?->parameter('slug')) {
+            return Restaurant::where('slug', request()->route()->parameter('slug'))->first();
+        }
+
+        return null;
+    }
 }

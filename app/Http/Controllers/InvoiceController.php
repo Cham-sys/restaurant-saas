@@ -13,13 +13,13 @@ class InvoiceController extends Controller
 
     public function showInvoice($slug, $trackingCode)
     {
-        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $restaurant = Restaurant::where("slug", $slug)->firstOrFail();
 
-        $order = Order::where('tracking_code', $trackingCode)
-            ->where('restaurant_id', $restaurant->id)
-            ->with(['items.product', 'offer', 'coupon', 'invoice'])
+        $order = Order::where("tracking_code", $trackingCode)
+            ->where("restaurant_id", $restaurant->id)
+            ->with(["items.product", "offer", "coupon", "invoice"])
             ->firstOrFail();
         $themePath = ThemeHelper::getThemePath($restaurant);
-        return view('themes.{$themePath}.orders.invoice', compact('restaurant', 'order'));
+        return view("themes.{$themePath}.orders.invoice", compact("restaurant", "order"));
     }
 }

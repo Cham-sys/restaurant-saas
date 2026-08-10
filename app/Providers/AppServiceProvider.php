@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Policies\CategoryPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\ProductPolicy;
+use App\Services\ThemeDiscoveryService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(ThemeDiscoveryService::class, function () {
+            return new ThemeDiscoveryService();
+        });
     }
 
     /**

@@ -14,6 +14,16 @@ class RestaurantController extends Controller
     /**
      * عرض الصفحة الرئيسية للمطعم
      */
+   
+    public function index()
+{
+    $restaurant = auth()->user()->restaurant;
+    
+    // جلب الإعدادات من قاعدة البيانات، أو استخدام القيم الافتراضية
+    $settings = $restaurant->themeSettings?->settings ?? $restaurant->theme?->default_settings ?? [];
+
+    return view('restaurant.dashboard', compact('settings'));
+}
     public function home($slug)
     {
         // تحميل المطعم مع الثيم

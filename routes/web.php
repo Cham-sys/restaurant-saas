@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\Restaurant\ThemeSettingsController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\OrderController;
@@ -59,6 +60,11 @@ Route::get('/{slug}/offers', [OfferController::class, 'index'])->name('offers.in
 // إرسال التقييم (AJAX)
 Route::post('/review/store-ajax', [ReviewController::class, 'storeAjax'])->name('review.store.ajax');
 
+// مجموعة مسارات API الخاصة بلوحة تحكم المطعم
+Route::middleware(['auth'])->prefix('restaurant/api')->group(function () {
+    Route::get('/theme/settings', [ThemeSettingsController::class, 'getSettings'])->name('restaurant.theme.settings.get');
+    Route::post('/theme/settings', [ThemeSettingsController::class, 'updateSettings'])->name('restaurant.theme.settings.update');
+});
 Route::resource('themes', ThemeController::class);
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
