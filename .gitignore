@@ -4,16 +4,16 @@
 __pycache__/
 *.o
 *.obj
-*.class
-*.dll
 *.so
-*.a
+*.dll
+*.exe
+*.class
 *.out
 
 # Dependencies
 node_modules/
-venv/
-.venv/
+vendor/
+composer.lock
 .env
 .env.local
 .env.*
@@ -27,18 +27,39 @@ venv/
 # Editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# System files
-.DS_Store
-Thumbs.db
-
-# Coverage reports
+# Build and distribution
+dist/
+build/
+target/
 coverage/
 htmlcov/
 .coverage
 
-# Build directories
-dist/
-build/
-target/
+# Python specific
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Laravel/Filament specific
+public/hot
+public/storage
+storage/
+bootstrap/cache/
+.npm
+.yarn
 ```

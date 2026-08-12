@@ -188,7 +188,7 @@
 <div class="flex min-h-screen">
 
   <!-- Toast Notification -->
-  <div id="toast" class="toast bg-[var(--primary)] text-white px-6 py-3 rounded-xl shadow-2xl border border-[var(--secondary)]/30 flex items-center gap-3 fixed top-6 left-1/2 -translate-x-1/2 z-50" style="display: none;">
+  <div id="toast" class="toast bg-[var(--primary)] text-white px-6 py-3 rounded-xl shadow-2xl border border-[var(--secondary)]/30 flex items-center gap-3" style="display: none;">
     <i class="fas fa-check-circle text-[var(--secondary)]"></i>
     <span id="toastMsg" class="text-sm">تمت العملية بنجاح</span>
   </div>
