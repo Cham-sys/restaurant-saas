@@ -19,9 +19,6 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->boolean('is_primary')->default(false);
             $table->timestamps();
-            
-            // فهارس للأداء
-            $table->index(['imageable_type', 'imageable_id']);
         });
     }
 

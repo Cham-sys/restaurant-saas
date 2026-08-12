@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\Restaurant;
+use Illuminate\Support\Facades\Auth;
 
 class ThemeHelper
 {
@@ -20,21 +21,23 @@ class ThemeHelper
     public static function view(Restaurant $restaurant, string $viewName): string
     {
         $themePath = self::getThemePath($restaurant);
+
         return "themes.{$themePath}.{$viewName}";
     }
-     /**
+
+    /**
      * جلب قيمة متغير الثيم
      */
     public static function getVar(string $key, $default = null)
     {
         $restaurant = self::getCurrentRestaurant();
-        
-        if (!$restaurant) {
+
+        if (! $restaurant) {
             return $default;
         }
 
         $settings = $restaurant->getThemeSettings();
-        
+
         return $settings[$key] ?? $default;
     }
 

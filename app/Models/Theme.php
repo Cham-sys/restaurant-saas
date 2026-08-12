@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class Theme extends Model
 {
@@ -81,13 +83,76 @@ class Theme extends Model
     public function loadThemeJson(): ?array
     {
         $path = $this->getThemePath() . '/theme.json';
-        
-        if (!file_exists($path)) {
+
+        if (! file_exists($path)) {
             return null;
         }
 
         $content = file_get_contents($path);
+
         return json_decode($content, true);
     }
 
+    public function activate(): bool
+    {
+        $this->update(['is_active' => true]);
+
+        static::query()->whereKeyNot($this->getKey())->update(['is_active' => false]);
+
+        return true;
+    }
+
+    public function deactivate(): bool
+    {
+        $this->update(['is_active' => false]);
+
+        return true;
+    }
+
+    public function resetSettingsForRestaurants(): int
+    {
+        return RestaurantThemeSetting::query()
+            ->where('theme_id', $this->getKey())
+            ->delete();
+    }
+
+    public function duplicate(string $name = null): ?self
+    {
+        $sourcePath = $this->getThemePath();
+
+        if (! is_dir($sourcePath)) {
+            return null;
+        }
+
+        $newName = trim((string) ($name ?: $this->name.' نسخة'));
+        $folderName = Str::slug($newName ?: $this->folder_name.'-copy');
+
+        if ($folderName === '' || $folderName === $this->folder_name) {
+            $folderName = $this->folder_name.'-copy';
+        }
+
+        $targetPath = resource_path('views/themes/'.$folderName);
+        $attempt = 1;
+
+        while (is_dir($targetPath)) {
+            $targetPath = resource_path('views/themes/'.$folderName.'-'.$attempt);
+            $attempt++;
+        }
+
+        $folderName = basename($targetPath);
+
+        if (! File::copyDirectory($sourcePath, $targetPath)) {
+            return null;
+        }
+
+        $theme = $this->replicate();
+        $theme->name = $newName ?: $this->name.' نسخة';
+        $theme->slug = $folderName;
+        $theme->folder_name = $folderName;
+        $theme->is_active = false;
+        $theme->is_default = false;
+        $theme->save();
+
+        return $theme;
+    }
 }

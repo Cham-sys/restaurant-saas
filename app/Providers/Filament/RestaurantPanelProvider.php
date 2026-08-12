@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\RestaurantDashboard;
+use App\Filament\Pages\RestaurantThemeSettings;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Coupons\CouponResource;
 use App\Filament\Resources\Invoices\InvoiceResource;
@@ -12,7 +14,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -32,6 +33,7 @@ class RestaurantPanelProvider extends PanelProvider
         return $panel
             ->id('restaurant')
             ->path('restaurant')
+            ->homeUrl(fn () => route('filament.restaurant.pages.restaurant-dashboard'))
             ->login()
             ->brandName('لوحة المطاعم')
             ->colors([
@@ -57,7 +59,8 @@ class RestaurantPanelProvider extends PanelProvider
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Dashboard::class,
+                RestaurantDashboard::class,
+                RestaurantThemeSettings::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -74,9 +77,9 @@ class RestaurantPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                ])
-                ->authMiddleware([
-                    Authenticate::class,
-                ]);
-    }            
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+            ]);
+    }
 }

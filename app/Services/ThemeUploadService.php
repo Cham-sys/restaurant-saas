@@ -5,12 +5,14 @@ namespace App\Services;
 use App\Models\Theme;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ZipArchive;
 
 class ThemeUploadService
 {
     protected string $themesPath;
-    
+
     protected array $requiredFiles = [
         'theme.json',
         'layout.blade.php',
@@ -30,6 +32,7 @@ class ThemeUploadService
     public function __construct()
     {
         $this->themesPath = resource_path('views/themes');
+        File::ensureDirectoryExists($this->themesPath);
     }
 
     /**
@@ -37,142 +40,105 @@ class ThemeUploadService
      */
     public function upload(string $zipPath, ?string $customFolderName = null): array
     {
-        // 1. التحقق من وجود الملف
-        if (!File::exists($zipPath)) {
-            return [
-                'success' => false,
-                'message' => 'ملف ZIP غير موجود',
-            ];
+        if (! File::exists($zipPath)) {
+            return ['success' => false, 'message' => 'ملف ZIP غير موجود.'];
         }
 
-        // 2. إنشاء مجلد مؤقت لفك الضغط
-        $tempDir = storage_path('app/temp/themes/' . Str::random(16));
-        File::makeDirectory($tempDir, 0755, true);
+        $extension = strtolower(pathinfo($zipPath, PATHINFO_EXTENSION));
+
+        if (! in_array($extension, ['zip', 'gz'], true) && ! str_ends_with($zipPath, '.zip')) {
+            return ['success' => false, 'message' => 'نوع الملف غير مدعوم. يجب أن يكون ZIP صالحاً.'];
+        }
+
+        $tempDir = storage_path('app/temp/themes/'.Str::random(16));
+        File::ensureDirectoryExists($tempDir);
 
         try {
-            // 3. فك الضغط
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
+
             if ($zip->open($zipPath) !== true) {
-                File::deleteDirectory($tempDir);
-                return [
-                    'success' => false,
-                    'message' => 'فشل في فك ضغط الملف. تأكد من أن الملف ZIP صالح.',
-                ];
+                return ['success' => false, 'message' => 'فشل في فك ضغط الملف. تأكد من أن الملف ZIP صالح.'];
             }
 
             $zip->extractTo($tempDir);
             $zip->close();
 
-            // 4. البحث عن المجلد الرئيسي (قد يكون داخل مجلد فرعي)
             $themeDir = $this->findThemeDirectory($tempDir);
-            
-            if (!$themeDir) {
-                File::deleteDirectory($tempDir);
-                return [
-                    'success' => false,
-                    'message' => 'لم يتم العثور على ملفات الثيم داخل الـ ZIP. تأكد من أن الملفات في المجلد الرئيسي.',
-                ];
+
+            if (! $themeDir) {
+                return ['success' => false, 'message' => 'لم يتم العثور على ملف theme.json داخل الـ ZIP. تأكد من أن المجلد الرئيسي للثيم يحتوي على هذا الملف.'];
             }
 
-            // 5. التحقق من theme.json
-            $themeJsonPath = $themeDir . '/theme.json';
-            if (!File::exists($themeJsonPath)) {
-                File::deleteDirectory($tempDir);
-                return [
-                    'success' => false,
-                    'message' => 'ملف theme.json غير موجود. هذا الملف إلزامي لكل ثيم.',
-                ];
+            $themeJson = $this->readThemeJson($themeDir);
+            if (! is_array($themeJson)) {
+                return ['success' => false, 'message' => 'ملف theme.json غير صالح أو غير موجود.'];
             }
 
-            $themeJson = json_decode(File::get($themeJsonPath), true);
-            if (!$themeJson) {
-                File::deleteDirectory($tempDir);
-                return [
-                    'success' => false,
-                    'message' => 'ملف theme.json غير صالح. تأكد من أنه JSON صحيح.',
-                ];
-            }
-
-            // 6. التحقق من الحقول الأساسية في theme.json
-            $requiredJsonFields = ['name', 'slug', 'version'];
-            foreach ($requiredJsonFields as $field) {
-                if (!isset($themeJson[$field])) {
-                    File::deleteDirectory($tempDir);
-                    return [
-                        'success' => false,
-                        'message' => "الحقل '{$field}' مفقود في theme.json. هذا الحقل إلزامي.",
-                    ];
+            foreach (['name', 'slug', 'version'] as $field) {
+                if (! isset($themeJson[$field]) || trim((string) $themeJson[$field]) === '') {
+                    return ['success' => false, 'message' => "الحقل '{$field}' مفقود في theme.json أو فارغ."];
                 }
             }
 
-            // 7. التحقق من الملفات الأساسية المطلوبة
+            if (! is_array($themeJson['default_settings'] ?? null)) {
+                return ['success' => false, 'message' => 'حقل default_settings يجب أن يكون مصفوفة JSON صالحة.'];
+            }
+
+            if (! is_array($themeJson['allowed_variables'] ?? null)) {
+                return ['success' => false, 'message' => 'حقل allowed_variables يجب أن يكون مصفوفة JSON صالحة.'];
+            }
+
             $missingFiles = [];
             foreach ($this->requiredFiles as $requiredFile) {
-                if (!File::exists($themeDir . '/' . $requiredFile)) {
+                if (! File::exists($themeDir.'/'.$requiredFile)) {
                     $missingFiles[] = $requiredFile;
                 }
             }
 
-            if (!empty($missingFiles)) {
-                File::deleteDirectory($tempDir);
-                return [
-                    'success' => false,
-                    'message' => 'الملفات التالية مفقودة من الثيم: ' . implode(', ', $missingFiles),
-                ];
+            if ($missingFiles !== []) {
+                return ['success' => false, 'message' => 'الملفات التالية مفقودة من الثيم: '.implode(', ', $missingFiles)];
             }
 
-            // 8. تحديد اسم المجلد
-            $folderName = $customFolderName ?? $themeJson['slug'] ?? Str::slug($themeJson['name']);
-            $folderName = Str::slug($folderName);
-            $targetDir = $this->themesPath . '/' . $folderName;
+            $folderName = $this->resolveFolderName($customFolderName ?? $themeJson['slug'] ?? Str::slug($themeJson['name']));
+            $targetDir = $this->themesPath.'/'.$folderName;
 
-            // 9. التحقق من عدم وجود ثيم بنفس الاسم
             if (File::isDirectory($targetDir)) {
-                File::deleteDirectory($tempDir);
-                return [
-                    'success' => false,
-                    'message' => "يوجد ثيم بالفعل بالمجلد '{$folderName}'. اختر اسماً مختلفاً أو احذف الثيم القديم.",
-                ];
+                return ['success' => false, 'message' => "يوجد ثيم بالفعل بالمجلد '{$folderName}'. اختر اسماً مميزاً أو احذف الثيم الحالي أولاً."];
             }
 
-            // 10. نقل الملفات إلى المجلد النهائي
             File::moveDirectory($themeDir, $targetDir);
-            
-            // 11. حذف المجلد المؤقت
-            File::deleteDirectory($tempDir);
 
-            // 12. تسجيل الثيم في قاعدة البيانات
-            $theme = Theme::create([
-                'name' => $themeJson['name'],
-                'slug' => $themeJson['slug'],
-                'folder_name' => $folderName,
-                'author' => $themeJson['author'] ?? 'غير معروف',
-                'version' => $themeJson['version'],
-                'description' => $themeJson['description'] ?? '',
-                'preview_image' => $themeJson['preview_image'] ?? null,
-                'default_settings' => $themeJson['default_settings'] ?? [],
-                'allowed_variables' => $themeJson['allowed_variables'] ?? [],
-                'is_active' => true,
-                'is_default' => false,
-            ]);
+            $theme = Theme::updateOrCreate(
+                ['folder_name' => $folderName],
+                [
+                    'name' => $themeJson['name'],
+                    'slug' => $themeJson['slug'],
+                    'author' => $themeJson['author'] ?? 'غير معروف',
+                    'version' => $themeJson['version'],
+                    'description' => $themeJson['description'] ?? '',
+                    'preview_image' => $themeJson['preview_image'] ?? null,
+                    'default_settings' => $themeJson['default_settings'],
+                    'allowed_variables' => $themeJson['allowed_variables'],
+                    'is_active' => true,
+                    'is_default' => ! Theme::where('is_default', true)->exists(),
+                ]
+            );
 
             return [
                 'success' => true,
-                'message' => 'تم رفع الثيم بنجاح',
+                'message' => 'تم رفع الثيم بنجاح وتثبيته في مجلد themes/.'.$folderName,
                 'theme' => $theme,
                 'folder_name' => $folderName,
             ];
-
-        } catch (\Exception $e) {
-            // في حالة الخطأ، حذف كل شيء
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'message' => 'حدث خطأ أثناء رفع الثيم: '.$e->getMessage(),
+            ];
+        } finally {
             if (File::isDirectory($tempDir)) {
                 File::deleteDirectory($tempDir);
             }
-            
-            return [
-                'success' => false,
-                'message' => 'حدث خطأ أثناء رفع الثيم: ' . $e->getMessage(),
-            ];
         }
     }
 
@@ -181,41 +147,99 @@ class ThemeUploadService
      */
     protected function findThemeDirectory(string $tempDir): ?string
     {
-        // إذا كان theme.json في المجلد الرئيسي
-        if (File::exists($tempDir . '/theme.json')) {
+        if (File::exists($tempDir.'/theme.json')) {
             return $tempDir;
         }
 
-        // البحث في المجلدات الفرعية
-        $directories = File::directories($tempDir);
-        foreach ($directories as $dir) {
-            if (File::exists($dir . '/theme.json')) {
-                return $dir;
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($tempDir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && strtolower($file->getFilename()) === 'theme.json') {
+                return dirname($file->getPathname());
             }
         }
 
         return null;
     }
 
+    protected function readThemeJson(string $themeDir): ?array
+    {
+        $path = $themeDir.'/theme.json';
+
+        if (! File::exists($path)) {
+            return null;
+        }
+
+        $content = File::get($path);
+        $decoded = json_decode((string) $content, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    protected function resolveFolderName(string $name): string
+    {
+        $slug = Str::slug($name);
+
+        if ($slug === '') {
+            throw new \RuntimeException('اسم المجلد غير صالح بعد التنظيف.');
+        }
+
+        return $slug;
+    }
+
     /**
      * حذف ثيم بالكامل
      */
+    public function cloneTheme(Theme $theme, ?string $customName = null): array
+    {
+        $sourceDir = $this->themesPath.'/'.$theme->folder_name;
+
+        if (! File::isDirectory($sourceDir)) {
+            return ['success' => false, 'message' => 'مجلد الثيم الأصلي غير موجود.'];
+        }
+
+        $newName = trim((string) ($customName ?: $theme->name.' نسخة'));
+        $folderName = $this->resolveFolderName($newName === '' ? $theme->folder_name.'-copy' : $newName);
+        $targetDir = $this->themesPath.'/'.$folderName;
+
+        if (File::isDirectory($targetDir)) {
+            return ['success' => false, 'message' => 'يوجد بالفعل ثيم بنفس الاسم.'];
+        }
+
+        File::copyDirectory($sourceDir, $targetDir);
+
+        $json = $theme->loadThemeJson() ?? [];
+        $newTheme = Theme::create([
+            'name' => $newName,
+            'slug' => Str::slug($newName) ?: $folderName,
+            'author' => $json['author'] ?? $theme->author,
+            'version' => $json['version'] ?? $theme->version,
+            'description' => $json['description'] ?? $theme->description,
+            'folder_name' => $folderName,
+            'preview_image' => $theme->preview_image,
+            'default_settings' => $json['default_settings'] ?? $theme->default_settings,
+            'allowed_variables' => $json['allowed_variables'] ?? $theme->allowed_variables,
+            'is_active' => false,
+            'is_default' => false,
+        ]);
+
+        return ['success' => true, 'message' => 'تم نسخ الثيم بنجاح.', 'theme' => $newTheme];
+    }
+
     public function delete(Theme $theme): array
     {
-        $themeDir = $this->themesPath . '/' . $theme->folder_name;
+        $themeDir = $this->themesPath.'/'.$theme->folder_name;
 
-        // حذف الملفات
         if (File::isDirectory($themeDir)) {
             File::deleteDirectory($themeDir);
         }
 
-        // حذف من قاعدة البيانات
         $theme->delete();
 
-        return [
-            'success' => true,
-            'message' => 'تم حذف الثيم بنجاح',
-        ];
+        return ['success' => true, 'message' => 'تم حذف الثيم بنجاح'];
     }
 
     /**
@@ -223,7 +247,7 @@ class ThemeUploadService
      */
     public function exists(string $folderName): bool
     {
-        return File::isDirectory($this->themesPath . '/' . $folderName)
-            && File::exists($this->themesPath . '/' . $folderName . '/theme.json');
+        return File::isDirectory($this->themesPath.'/'.$folderName)
+            && File::exists($this->themesPath.'/'.$folderName.'/theme.json');
     }
 }

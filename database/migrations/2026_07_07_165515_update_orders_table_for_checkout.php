@@ -12,11 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->string('tracking_code')->unique()->nullable(); // رمز التتبع
-            $table->decimal('final_amount', 10, 2)->default(0); // المبلغ النهائي
-            $table->enum('payment_method', ['cash', 'transfer'])->default('cash');
-            $table->string('payment_proof')->nullable(); 
-            $table->timestamp('delivered_at')->nullable();
+            if (! Schema::hasColumn('orders', 'tracking_code')) {
+                $table->string('tracking_code')->unique()->nullable(); // رمز التتبع
+            }
+
+            if (! Schema::hasColumn('orders', 'final_amount')) {
+                $table->decimal('final_amount', 10, 2)->default(0); // المبلغ النهائي
+            }
+
+            if (! Schema::hasColumn('orders', 'payment_method')) {
+                $table->enum('payment_method', ['cash', 'transfer'])->default('cash');
+            }
+
+            if (! Schema::hasColumn('orders', 'payment_proof')) {
+                $table->string('payment_proof')->nullable();
+            }
+
+            if (! Schema::hasColumn('orders', 'delivered_at')) {
+                $table->timestamp('delivered_at')->nullable();
+            }
         });
     }
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RestaurantThemeSetting extends Model
 {
-     protected $fillable = [
+    protected $fillable = [
         'restaurant_id',
         'theme_id',
         'settings',
@@ -46,7 +46,7 @@ class RestaurantThemeSetting extends Model
         $defaultSettings = $this->theme->default_settings ?? [];
         $customSettings = $this->settings ?? [];
 
-        return array_merge($defaultSettings, $customSettings);
+        return array_replace($defaultSettings, $customSettings);
     }
 
     public function resetToDefaults(): void

@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-             $table->foreignId('offer_id')->nullable()->after('restaurant_id')->constrained('offers')->nullOnDelete();
-            $table->decimal('discount_amount', 10, 2)->default(0);
+            if (! Schema::hasColumn('orders', 'offer_id')) {
+                $table->foreignId('offer_id')->nullable()->after('restaurant_id')->constrained('offers')->nullOnDelete();
+            }
+
+            if (! Schema::hasColumn('orders', 'discount_amount')) {
+                $table->decimal('discount_amount', 10, 2)->default(0);
+            }
         });
     }
 
