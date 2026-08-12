@@ -4,55 +4,41 @@
 __pycache__/
 *.o
 *.obj
-dist/
-build/
 *.class
+*.dll
 *.so
 *.a
-*.dll
-*.exe
 *.out
 
 # Dependencies
 node_modules/
-vendor/
-composer.lock
-*.lock
-.cache/
+venv/
+.venv/
+.env
+.env.local
+.env.*
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
 *.swo
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-.env.local
-.env.*
 
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Coverage
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
 coverage/
 htmlcov/
 .coverage
 
-# Package manager
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS generated files
-ehthumbs.db
-Icon?
-Network Trash Folder
-Temporary Items
-.Trash-*
+# Build directories
+dist/
+build/
+target/
 ```
