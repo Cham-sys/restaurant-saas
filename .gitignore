@@ -1,24 +1,58 @@
-/.phpunit.cache
-/node_modules
-/public/build
-/public/fonts-manifest.dev.json
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
+*.class
+*.so
+*.a
+*.dll
+*.exe
+*.out
+
+# Dependencies
+node_modules/
+vendor/
+composer.lock
+*.lock
+.cache/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-/auth.json
-/.fleet
-/.idea
-/.nova
-/.vscode
-/.zed
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Package manager
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+ehthumbs.db
+Icon?
+Network Trash Folder
+Temporary Items
+.Trash-*
+```
