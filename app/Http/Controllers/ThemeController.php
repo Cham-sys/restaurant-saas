@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RestaurantThemeSetting;
 use App\Models\Theme;
+use App\Services\ThemeUploadService;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ThemeController extends Controller
 {
@@ -13,6 +16,7 @@ class ThemeController extends Controller
     public function index()
     {
         $themes = Theme::latest()->paginate(10);
+
         return view('themes.index', compact('themes'));
     }
 
@@ -84,12 +88,44 @@ class ThemeController extends Controller
         return redirect()->route('themes.index')->with('success', 'Theme updated successfully!');
     }
 
+    public function activate(Theme $theme)
+    {
+        $theme->activate();
+
+        return redirect()->back()->with('success', 'تم تفعيل الثيم بنجاح.');
+    }
+
+    public function clone(Request $request, Theme $theme): \Illuminate\Http\RedirectResponse
+    {
+        $name = trim((string) $request->input('name', $theme->name.' نسخة'));
+        $result = app(ThemeUploadService::class)->cloneTheme($theme, $name);
+
+        if (! $result['success']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
+
+        return redirect()->back()->with('success', 'تم نسخ الثيم بنجاح.');
+    }
+
+    public function resetSettings(Theme $theme)
+    {
+        RestaurantThemeSetting::query()->where('theme_id', $theme->id)->delete();
+
+        return redirect()->back()->with('success', 'تمت إعادة تعيين إعدادات الثيم إلى القيم الافتراضية.');
+    }
+
+    public function preview(Theme $theme): View
+    {
+        $settings = $theme->default_settings ?? [];
+
+        return view('themes.preview', compact('theme', 'settings'));
+    }
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Theme $theme)
     {
-        // Prevent deletion if theme is in use
         if ($theme->restaurants()->count() > 0) {
             return redirect()->route('themes.index')->with('error', 'Cannot delete theme that is in use by restaurants!');
         }

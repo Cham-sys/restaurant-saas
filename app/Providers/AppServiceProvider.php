@@ -9,6 +9,7 @@ use App\Policies\CategoryPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\ProductPolicy;
 use App\Services\ThemeDiscoveryService;
+use App\Services\ThemeUploadService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ThemeDiscoveryService::class, function () {
-            return new ThemeDiscoveryService();
+            return new ThemeDiscoveryService;
+        });
+
+        $this->app->singleton(ThemeUploadService::class, function () {
+            return new ThemeUploadService;
         });
     }
 

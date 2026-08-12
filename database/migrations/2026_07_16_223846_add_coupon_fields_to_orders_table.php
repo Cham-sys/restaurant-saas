@@ -12,13 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-             // بيانات الكوبون (منفصلة عن العرض)
-            $table->foreignId('coupon_id')->nullable()->constrained('coupons')->nullOnDelete();
-            $table->string('coupon_code')->nullable(); // حفظ الكود (في حال حذف الكوبون)
-            $table->decimal('coupon_discount', 10, 2)->default(0);
-            
-            // إعادة تسمية discount_amount إلى offer_discount للوضوح
-            // ملاحظة: إذا كان لديك بيانات موجودة، سنحتاج rename
+            if (! Schema::hasColumn('orders', 'coupon_id')) {
+                $table->foreignId('coupon_id')->nullable()->constrained('coupons')->nullOnDelete();
+            }
+
+            if (! Schema::hasColumn('orders', 'coupon_code')) {
+                $table->string('coupon_code')->nullable(); // حفظ الكود (في حال حذف الكوبون)
+            }
+
+            if (! Schema::hasColumn('orders', 'coupon_discount')) {
+                $table->decimal('coupon_discount', 10, 2)->default(0);
+            }
         });
     }
 

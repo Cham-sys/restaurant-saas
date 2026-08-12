@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('themes', function (Blueprint $table) {
@@ -14,7 +17,7 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('themes', 'version')) {
-                $table->string('version')->default('1.0')->after('author');
+                $table->string('version')->default('1.0.0')->after('author');
             }
 
             if (! Schema::hasColumn('themes', 'sections')) {
@@ -37,14 +40,37 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('themes', function (Blueprint $table) {
-            $table->dropColumn(['author', 'version', 'sections', 'settings']);
+            if (Schema::hasColumn('themes', 'author')) {
+                $table->dropColumn('author');
+            }
+
+            if (Schema::hasColumn('themes', 'version')) {
+                $table->dropColumn('version');
+            }
+
+            if (Schema::hasColumn('themes', 'sections')) {
+                $table->dropColumn('sections');
+            }
+
+            if (Schema::hasColumn('themes', 'settings')) {
+                $table->dropColumn('settings');
+            }
         });
 
         Schema::table('restaurants', function (Blueprint $table) {
-            $table->dropColumn(['theme_settings', 'custom_sections']);
+            if (Schema::hasColumn('restaurants', 'theme_settings')) {
+                $table->dropColumn('theme_settings');
+            }
+
+            if (Schema::hasColumn('restaurants', 'custom_sections')) {
+                $table->dropColumn('custom_sections');
+            }
         });
     }
 };

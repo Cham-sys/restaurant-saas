@@ -14,21 +14,19 @@ class ThemeSettingsController extends Controller
      */
     public function getSettings()
     {
-        $restaurant = Auth::user()->restaurant; // افتراض أن المستخدم الحالي هو صاحب المطعم
-        
-        if (!$restaurant || !$restaurant->theme) {
+        $restaurant = Auth::user()?->restaurant()->with('theme')->first();
+
+        if (! $restaurant || ! $restaurant->theme) {
             return response()->json(['error' => 'لم يتم العثور على مطعم أو ثيم'], 404);
         }
 
-        // جلب الإعدادات المخصصة، أو العودة للإعدادات الافتراضية للثيم
-        $settings = $restaurant->themeSettings 
-            ? $restaurant->themeSettings->settings 
-            : $restaurant->theme->default_settings;
+        $defaults = $restaurant->theme->default_settings ?? [];
+        $customSettings = $restaurant->themeSettings?->settings ?? [];
 
         return response()->json([
             'success' => true,
-            'settings' => $settings,
-            'allowed_variables' => $restaurant->theme->allowed_variables
+            'settings' => array_replace($defaults, $customSettings),
+            'allowed_variables' => $restaurant->theme->allowed_variables ?? [],
         ]);
     }
 
@@ -37,25 +35,45 @@ class ThemeSettingsController extends Controller
      */
     public function updateSettings(Request $request)
     {
-        $restaurant = Auth::user()->restaurant;
+        $restaurant = Auth::user()?->restaurant()->with('theme')->first();
+
+        if (! $restaurant || ! $restaurant->theme) {
+            return response()->json(['error' => 'لم يتم العثور على مطعم أو ثيم'], 404);
+        }
 
         $request->validate([
             'settings' => 'required|array',
         ]);
 
-        // تحديث أو إنشاء سجل الإعدادات
+        $allowedVariables = $restaurant->theme->allowed_variables ?? [];
+        $allowedKeys = array_keys($allowedVariables);
+        $submittedSettings = $request->input('settings', []);
+        $filteredSettings = [];
+
+        foreach ($allowedKeys as $key) {
+            if (array_key_exists($key, $submittedSettings)) {
+                $filteredSettings[$key] = $submittedSettings[$key];
+            }
+        }
+
+        $mergedSettings = array_replace(
+            $restaurant->theme->default_settings ?? [],
+            $restaurant->themeSettings?->settings ?? [],
+            $filteredSettings
+        );
+
         $themeSetting = RestaurantThemeSetting::updateOrCreate(
             ['restaurant_id' => $restaurant->id],
             [
                 'theme_id' => $restaurant->theme_id,
-                'settings' => $request->settings,
+                'settings' => $mergedSettings,
             ]
         );
 
         return response()->json([
             'success' => true,
             'message' => 'تم حفظ إعدادات المظهر بنجاح ✓',
-            'settings' => $themeSetting->settings
+            'settings' => $themeSetting->settings,
         ]);
     }
 }

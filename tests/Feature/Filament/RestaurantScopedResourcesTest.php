@@ -23,6 +23,7 @@ class RestaurantScopedResourcesTest extends TestCase
         $theme = Theme::create([
             'name' => 'Theme A',
             'slug' => 'theme-a',
+            'folder_name' => 'theme-a',
             'is_active' => true,
         ]);
 

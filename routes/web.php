@@ -1,16 +1,16 @@
 <?php
 
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\Restaurant\ThemeSettingsController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PwaController;
+use App\Http\Controllers\Restaurant\ThemeSettingsController;
 use App\Http\Controllers\RestaurantController;
+use App\Http\Controllers\RestaurantDashboardController;
 use App\Http\Controllers\ReviewController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ThemeController;
-
+use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -64,10 +64,15 @@ Route::post('/review/store-ajax', [ReviewController::class, 'storeAjax'])->name(
 Route::middleware(['auth'])->prefix('restaurant/api')->group(function () {
     Route::get('/theme/settings', [ThemeSettingsController::class, 'getSettings'])->name('restaurant.theme.settings.get');
     Route::post('/theme/settings', [ThemeSettingsController::class, 'updateSettings'])->name('restaurant.theme.settings.update');
+    Route::get('/dashboard/summary', [RestaurantDashboardController::class, 'summary'])->name('restaurant.dashboard.summary');
 });
+Route::get('themes/{theme}/preview', [ThemeController::class, 'preview'])->name('themes.preview');
+Route::post('themes/{theme}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
+Route::post('themes/{theme}/clone', [ThemeController::class, 'clone'])->name('themes.clone');
+Route::post('themes/{theme}/reset-settings', [ThemeController::class, 'resetSettings'])->name('themes.reset-settings');
 Route::resource('themes', ThemeController::class);
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 });
-    
+
 require __DIR__.'/settings.php';
