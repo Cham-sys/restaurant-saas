@@ -6,24 +6,22 @@ use App\Helpers\ThemeHelper;
 use App\Models\Product;
 use App\Models\Restaurant;
 use App\Models\Review;
-use Illuminate\Http\Request;
-
 
 class RestaurantController extends Controller
 {
     /**
      * عرض الصفحة الرئيسية للمطعم
      */
-   
     public function index()
-{
-    $restaurant = auth()->user()->restaurant;
-    
-    // جلب الإعدادات من قاعدة البيانات، أو استخدام القيم الافتراضية
-    $settings = $restaurant->themeSettings?->settings ?? $restaurant->theme?->default_settings ?? [];
+    {
+        $restaurant = auth()->user()->restaurant;
 
-    return view('restaurant.dashboard', compact('settings'));
-}
+        // جلب الإعدادات من قاعدة البيانات، أو استخدام القيم الافتراضية
+        $settings = $restaurant->themeSettings?->settings ?? $restaurant->theme?->default_settings ?? [];
+
+        return view('restaurant.dashboard', compact('settings'));
+    }
+
     public function home($slug)
     {
         // تحميل المطعم مع الثيم
@@ -34,40 +32,42 @@ class RestaurantController extends Controller
         $categories = $restaurant->categories()
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->take(6) 
+            ->take(6)
             ->get();
 
         // تحديد مسار الثيم (سنستخدم burger-theme كافتراضي حالياً)
         $themePath = ThemeHelper::getThemePath($restaurant);
 
-        return view("themes.{$themePath}.pages.home", compact('restaurant' , 'categories'));
+        return view("themes.{$themePath}.pages.home", compact('restaurant', 'categories'));
     }
+
     public function showProduct($slug, $productId)
-{
-    $restaurant = Restaurant::with('theme')
-        ->where('slug', $slug)
-        ->where('is_active', true)
-        ->firstOrFail();
+    {
+        $restaurant = Restaurant::with('theme')
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail();
 
-    $product = Product::where('id', $productId)
-        ->where('restaurant_id', $restaurant->id)
-        ->where('is_available', true)
-        ->firstOrFail();
+        $product = Product::where('id', $productId)
+            ->where('restaurant_id', $restaurant->id)
+            ->where('is_available', true)
+            ->firstOrFail();
 
-    // جلب التقييمات المعتمدة للمنتج
-    $reviews = Review::whereHas('order', function($query) use ($productId) {
-            $query->whereHas('items', function($q) use ($productId) {
+        // جلب التقييمات المعتمدة للمنتج
+        $reviews = Review::whereHas('order', function ($query) use ($productId) {
+            $query->whereHas('items', function ($q) use ($productId) {
                 $q->where('product_id', $productId);
             });
         })
-        ->with('images')
-        ->latest()
-        ->paginate(10);
+            ->with('images')
+            ->latest()
+            ->paginate(10);
 
-    $themePath = ThemeHelper::getThemePath($restaurant);
+        $themePath = ThemeHelper::getThemePath($restaurant);
 
-    return view("themes.{$themePath}.pages.product", compact('restaurant', 'product', 'reviews'));
-}
+        return view("themes.{$themePath}.pages.product", compact('restaurant', 'product', 'reviews'));
+    }
+
     /**
      * عرض قائمة الطعام (سنضيفها في المرحلة 4.2)
      */
@@ -81,15 +81,19 @@ class RestaurantController extends Controller
         // تحميل التصنيفات النشطة مع منتجاتها المتاحة
         $categories = $restaurant->categories()
             ->where('is_active', true)
-            ->with(['products' => function($query) {
+            ->with(['products' => function ($query) {
                 $query->where('is_available', true)
-                      ->orderBy('sort_order');
+                    ->orderBy('sort_order');
             }])
             ->orderBy('sort_order')
             ->get();
 
         $themePath = ThemeHelper::getThemePath($restaurant);
 
-        return view("themes.{$themePath}.pages.menu", compact('restaurant', 'categories'));
+        $table = session('restaurant_table_restaurant_id') === $restaurant->id
+            ? $restaurant->tables()->find(session('restaurant_table_id'))
+            : null;
+
+        return view("themes.{$themePath}.pages.menu", compact('restaurant', 'categories', 'table'));
     }
 }

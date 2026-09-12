@@ -4,11 +4,10 @@ namespace App\Filament\Resources\Restaurants\Schemas;
 
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
@@ -16,7 +15,7 @@ class RestaurantForm
 {
     public static function configure(Schema $schema): Schema
     {
-       return $schema
+        return $schema
             ->components([
                 // --- المعلومات الأساسية ---
                 TextInput::make('name')
@@ -43,12 +42,22 @@ class RestaurantForm
                 FileUpload::make('logo')
                     ->label('الشعار')
                     ->image()
+                    ->disk('public')
                     ->directory('restaurants/logos'),
+                TextInput::make('logo_url')
+                    ->label('أو رابط الشعار')
+                    ->url()
+                    ->maxLength(2048),
 
                 FileUpload::make('cover_image')
                     ->label('صورة الغلاف')
                     ->image()
+                    ->disk('public')
                     ->directory('restaurants/covers'),
+                TextInput::make('cover_image_url')
+                    ->label('أو رابط صورة الغلاف')
+                    ->url()
+                    ->maxLength(2048),
 
                 // --- معلومات التواصل والموقع ---
                 TextInput::make('phone')
@@ -105,7 +114,12 @@ class RestaurantForm
                 FileUpload::make('qr_code_image')
                     ->label('صورة QR الدفع')
                     ->image()
+                    ->disk('public')
                     ->directory('restaurants/qrcodes'),
+                TextInput::make('qr_code_image_url')
+                    ->label('أو رابط صورة QR الدفع')
+                    ->url()
+                    ->maxLength(2048),
 
                 Textarea::make('bank_details')
                     ->label('تفاصيل الحساب البنكي')

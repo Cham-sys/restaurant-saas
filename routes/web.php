@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\DriverController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\OrderController;
@@ -8,11 +9,20 @@ use App\Http\Controllers\PwaController;
 use App\Http\Controllers\Restaurant\ThemeSettingsController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RestaurantDashboardController;
+use App\Http\Controllers\RestaurantTableController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::get('/{slug}/table/{token}', [RestaurantTableController::class, 'enter'])->name('restaurant.table.menu');
+Route::middleware('auth')->get('/restaurant/tables/{table}/qr', [RestaurantTableController::class, 'qr'])->name('restaurant.table.qr');
+
+Route::middleware('auth')->prefix('driver')->group(function () {
+    Route::get('/orders', [DriverController::class, 'index'])->name('driver.orders');
+    Route::post('/orders/{order}/location', [DriverController::class, 'updateLocation'])->name('driver.location.update');
+});
 
 Route::get('/{slug}', [RestaurantController::class, 'home'])->name('restaurant.home');
 Route::get('/{slug}/menu', [RestaurantController::class, 'menu'])->name('restaurant.menu');
@@ -28,6 +38,7 @@ Route::get('/{slug}/checkout', [OrderController::class, 'checkout'])->name('chec
 Route::post('/{slug}/checkout', [OrderController::class, 'store'])->name('checkout.store');
 Route::get('/{slug}/order/success/{code}', [OrderController::class, 'success'])->name('order.success');
 Route::get('/{slug}/track/{code}', [OrderController::class, 'track'])->name('order.track');
+Route::get('/{slug}/track/{code}/location', [OrderController::class, 'trackingLocation'])->name('order.track.location');
 
 // صفحة إدخال رمز التتبع
 Route::get('/{slug}/track', [OrderController::class, 'trackForm'])->name('order.track.form');

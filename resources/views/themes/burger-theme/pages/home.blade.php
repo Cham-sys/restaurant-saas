@@ -5,7 +5,7 @@
     <!-- Hero Section -->
     <section class="relative h-screen flex items-center justify-center overflow-hidden">
         @if($restaurant->cover_image)
-            <img src="{{ asset('storage/' . $restaurant->cover_image) }}" alt="{{ $restaurant->name }}"
+            <img src="{{ media_url($restaurant->cover_image) }}" alt="{{ $restaurant->name }}"
                 class="absolute inset-0 w-full h-full object-cover">
             <div class="absolute inset-0 bg-black bg-opacity-50"></div>
         @else
@@ -118,7 +118,7 @@
                         class="bg-white rounded-2xl shadow-lg overflow-hidden group hover:-translate-y-2 transition duration-300">
                         <div class="relative h-48 overflow-hidden">
                             @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                                <img src="{{ media_url($product->image) }}" alt="{{ $product->name }}"
                                     class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                             @else
                                 <div class="w-full h-full bg-gray-200 flex items-center justify-center text-4xl">🍔</div>
@@ -234,7 +234,7 @@
 
                 @if($restaurant->cover_image)
                     <div>
-                        <img src="{{ asset('storage/' . $restaurant->cover_image) }}" alt="{{ $restaurant->name }}"
+                        <img src="{{ media_url($restaurant->cover_image) }}" alt="{{ $restaurant->name }}"
                             class="rounded-2xl shadow-2xl">
                     </div>
                 @endif

@@ -10,7 +10,7 @@
             <!-- صورة المنتج -->
             <div>
                 @if($product->image)
-                    <img src="{{ asset('storage/' . $product->image) }}" 
+                    <img src="{{ media_url($product->image) }}"
                          alt="{{ $product->name }}"
                          class="w-full h-96 object-cover rounded-3xl shadow-xl">
                 @else

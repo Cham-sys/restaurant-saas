@@ -6,10 +6,12 @@ use App\Filament\Pages\RestaurantDashboard;
 use App\Filament\Pages\RestaurantThemeSettings;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Coupons\CouponResource;
+use App\Filament\Resources\Drivers\DriverResource;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\Offers\OfferResource;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Products\ProductResource;
+use App\Filament\Resources\RestaurantTables\RestaurantTableResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,7 +35,7 @@ class RestaurantPanelProvider extends PanelProvider
         return $panel
             ->id('restaurant')
             ->path('restaurant')
-            ->homeUrl(fn () => route('filament.restaurant.pages.restaurant-dashboard'))
+            ->homeUrl(fn () => url('/restaurant'))
             ->login()
             ->brandName('لوحة المطاعم')
             ->colors([
@@ -56,6 +58,8 @@ class RestaurantPanelProvider extends PanelProvider
                 InvoiceResource::class,
                 OfferResource::class,
                 CouponResource::class,
+                DriverResource::class,
+                RestaurantTableResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

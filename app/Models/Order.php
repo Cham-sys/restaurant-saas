@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,9 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'restaurant_id',
+        'restaurant_table_id',
         'user_id',
+        'driver_id',
         'customer_name',
         'customer_phone',
         'customer_email',
@@ -20,7 +25,12 @@ class Order extends Model
         'coupon_discount',
         'delivery_type',
         'delivery_address',
-        'final_amount',   
+        'delivery_latitude',
+        'delivery_longitude',
+        'driver_latitude',
+        'driver_longitude',
+        'driver_location_updated_at',
+        'final_amount',
         'payment_method',
         'delivery_city',
         'delivery_fee',
@@ -38,32 +48,60 @@ class Order extends Model
         'offer_id',
         'discount_amount',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'delivery_latitude' => 'decimal:7',
+            'delivery_longitude' => 'decimal:7',
+            'driver_latitude' => 'decimal:7',
+            'driver_longitude' => 'decimal:7',
+            'driver_location_updated_at' => 'datetime',
+        ];
+    }
+
     // العلاقة مع التقييم
     public function review(): HasOne
     {
         return $this->hasOne(Review::class);
     }
+
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
     }
+
     public function offer(): BelongsTo
     {
         return $this->belongsTo(Offer::class);
     }
+
     // هل تم تقييم هذا الطلب؟
     public function getIsReviewedAttribute(): bool
     {
         return $this->review()->exists();
     }
+
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
     }
+
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    public function restaurantTable(): BelongsTo
+    {
+        return $this->belongsTo(RestaurantTable::class);
+    }
+
     public function invoice(): HasOne
     {
         return $this->hasOne(Invoice::class);
     }
+
     protected static function boot()
     {
         parent::boot();
@@ -74,8 +112,9 @@ class Order extends Model
             }
         });
     }
+
     public function items(): HasMany
     {
-    return $this->hasMany(Order_item::class);
+        return $this->hasMany(Order_item::class);
     }
 }

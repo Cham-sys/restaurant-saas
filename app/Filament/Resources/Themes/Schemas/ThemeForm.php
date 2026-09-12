@@ -31,7 +31,12 @@ class ThemeForm
                 FileUpload::make('preview_image')
                     ->label('صورة المعاينة')
                     ->image()
+                    ->disk('public')
                     ->directory('themes/previews'),
+                TextInput::make('preview_image_url')
+                    ->label('أو رابط صورة المعاينة')
+                    ->url()
+                    ->maxLength(2048),
 
                 Toggle::make('is_active')
                     ->label('تصميم مفعل')

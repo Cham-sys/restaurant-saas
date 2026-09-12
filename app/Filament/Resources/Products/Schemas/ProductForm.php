@@ -4,8 +4,8 @@ namespace App\Filament\Resources\Products\Schemas;
 
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
@@ -15,7 +15,7 @@ class ProductForm
     {
         return $schema
             ->components([
-                 Select::make('category_id')
+                Select::make('category_id')
                     ->label('التصنيف')
                     ->relationship(
                         name: 'category',
@@ -46,7 +46,15 @@ class ProductForm
                     ->prefix('$'),
                 FileUpload::make('image')
                     ->label('الصورة')
-                    ->image(),
+                    ->image()
+                    ->disk('public')
+                    ->directory('products')
+                    ->maxSize(5120),
+                TextInput::make('image_url')
+                    ->label('أو رابط الصورة')
+                    ->url()
+                    ->maxLength(2048)
+                    ->helperText('اتركه فارغاً إذا رفعت صورة من جهازك.'),
                 Toggle::make('is_available')
                     ->label('متوفر')
                     ->required(),

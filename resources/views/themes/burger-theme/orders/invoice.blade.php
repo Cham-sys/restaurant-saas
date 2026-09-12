@@ -26,7 +26,7 @@
             <div class="flex justify-between items-start">
                 <div>
                     @if($restaurant->logo)
-                        <img src="{{ asset('storage/' . $restaurant->logo) }}" 
+                        <img src="{{ media_url($restaurant->logo) }}"
                              alt="{{ $restaurant->name }}" 
                              class="w-20 h-20 rounded-full object-cover mb-4">
                     @endif

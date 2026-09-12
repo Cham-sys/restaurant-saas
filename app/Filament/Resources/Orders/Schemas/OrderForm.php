@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Orders\Schemas;
 
-use Filament\Forms\Components\TextInput;
+use App\Models\User;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class OrderForm
@@ -22,6 +24,16 @@ class OrderForm
                     ->label('رقم الهاتف')
                     ->tel()
                     ->required(),
+                Select::make('driver_id')
+                    ->label('مندوب التوصيل')
+                    ->options(fn (): array => User::query()
+                        ->where('role', 'driver')
+                        ->where('restaurant_id', auth()->user()->restaurant_id)
+                        ->where('is_active', true)
+                        ->pluck('name', 'id')
+                        ->all())
+                    ->searchable()
+                    ->preload(),
                 TextInput::make('customer_email')
                     ->label('البريد الإلكتروني')
                     ->email(),
@@ -29,6 +41,10 @@ class OrderForm
                     ->label('نوع التوصيل')
                     ->required()
                     ->default('delivery'),
+                TextInput::make('restaurant_table_id')
+                    ->label('رقم الطاولة')
+                    ->numeric()
+                    ->disabled(),
                 Textarea::make('delivery_address')
                     ->label('عنوان التوصيل')
                     ->columnSpanFull(),

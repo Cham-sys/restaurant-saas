@@ -23,9 +23,9 @@
     <!-- PWA Manifest & Icons ديناميكية -->
     <link rel="manifest" href="{{ route('pwa.manifest', $restaurant->slug) }}">
     @php
-        $iconUrl = $restaurant->logo ? asset('storage/' . $restaurant->logo) : asset('/icons/default-icon.png');
+        $iconUrl = media_url($restaurant->logo) ?? asset('/icons/default-icon.png');
     @endphp
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ $iconUrl }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ media_url($restaurant->logo) ?? $iconUrl }}">
     <link rel="apple-touch-icon" href="{{ $iconUrl }}">
     
     <!-- ==================== Libraries & Fonts ==================== -->
@@ -36,6 +36,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
 
     <!-- ==================== Custom Styles ==================== -->
     <style>
@@ -164,7 +166,7 @@
                 <!-- Logo & Brand -->
                 <a href="{{ route('restaurant.home', $restaurant->slug) }}" class="flex items-center gap-3 group">
                     @if($restaurant->logo)
-                        <img src="{{ asset('storage/' . $restaurant->logo) }}" 
+                        <img src="{{ media_url($restaurant->logo) }}"
                              alt="{{ $restaurant->name }}" 
                              class="w-12 h-12 rounded-full object-cover border-2 border-gray-100 group-hover:border-primary transition shadow-sm">
                     @else
@@ -212,7 +214,7 @@
                                         @php $product = \App\Models\Product::find($id); @endphp
                                         @if($product)
                                             <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
-                                                <img src="{{ $product->image ? asset('storage/'.$product->image) : 'https://via.placeholder.com/50?text=🍔' }}" class="w-12 h-12 rounded-md object-cover bg-gray-100">
+                                                <img src="{{ media_url($product->image) ?? 'https://via.placeholder.com/50?text=food' }}" class="w-12 h-12 rounded-md object-cover bg-gray-100">
                                                 <div class="flex-1 min-w-0">
                                                     <h4 class="text-sm font-bold text-gray-800 truncate">{{ $product->name }}</h4>
                                                     <p class="text-xs text-primary font-bold">{{ number_format($product->price, 2) }} ر.س × {{ $details['qty'] }}</p>
@@ -295,7 +297,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-6">
                         @if($restaurant->logo)
-                            <img src="{{ asset('storage/' . $restaurant->logo) }}" class="w-12 h-12 rounded-full object-cover border border-gray-700">
+                            <img src="{{ media_url($restaurant->logo) }}" class="w-12 h-12 rounded-full object-cover border border-gray-700">
                         @else
                             <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-2xl">🍔</div>
                         @endif

@@ -34,6 +34,9 @@ class OrdersTable
                 TextColumn::make('delivery_type')
                     ->label('نوع التوصيل')
                     ->searchable(),
+                TextColumn::make('restaurantTable.number')
+                    ->label('الطاولة')
+                    ->searchable(),
                 TextColumn::make('delivery_city')
                     ->label('المدينة')
                     ->searchable(),

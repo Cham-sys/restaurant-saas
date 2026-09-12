@@ -27,7 +27,8 @@ class CategoriesTable
                     ->label('الرابط')
                     ->searchable(),
                 ImageColumn::make('image')
-                    ->label('الصورة'),
+                    ->label('الصورة')
+                    ->disk('public'),
                 TextColumn::make('sort_order')
                     ->label('الترتيب')
                     ->numeric()

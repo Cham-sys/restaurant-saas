@@ -25,7 +25,7 @@ class ProductsTable
                     ->label('المطعم')
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true), 
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('name')
                     ->label('الاسم')
@@ -42,7 +42,8 @@ class ProductsTable
                     ->money()
                     ->sortable(),
                 ImageColumn::make('image')
-                    ->label('الصورة'),
+                    ->label('الصورة')
+                    ->disk('public'),
                 IconColumn::make('is_available')
                     ->label('متوفر')
                     ->boolean(),

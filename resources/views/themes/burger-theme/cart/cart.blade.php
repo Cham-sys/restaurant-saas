@@ -33,7 +33,7 @@
                             <!-- صورة المنتج -->
                             <div class="w-24 h-24 flex-shrink-0">
                                 @if($item['product']->image)
-                                    <img src="{{ asset('storage/' . $item['product']->image) }}" 
+                                    <img src="{{ media_url($item['product']->image) }}"
                                          alt="{{ $item['product']->name }}" 
                                          class="w-full h-full object-cover rounded-xl">
                                 @else

@@ -2,6 +2,7 @@
     $dashboardSummaryUrl = route('restaurant.dashboard.summary');
 @endphp
 
+<div id="restaurant-dashboard-root">
 <style>
   :root {
     --primary: #0a0a0a;
@@ -183,8 +184,6 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
-</head>
-<body>
 
 <!-- Toast Notification -->
 <div id="toast" class="toast bg-[var(--primary)] text-white px-6 py-3 rounded-xl shadow-2xl border border-[var(--secondary)]/30 flex items-center gap-3">
@@ -1433,3 +1432,4 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(refreshDashboardSummary, 30000);
 });
 </script>
+</div>

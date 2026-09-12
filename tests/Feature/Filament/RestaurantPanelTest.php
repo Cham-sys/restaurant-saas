@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Restaurant;
 use App\Models\User;
 use App\Providers\Filament\RestaurantPanelProvider;
 use Filament\Panel;
@@ -16,7 +17,10 @@ it('registers a dedicated restaurant panel with the expected route', function ()
 });
 
 it('loads the custom restaurant dashboard page for authenticated users', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'role' => 'restaurant_admin',
+        'restaurant_id' => Restaurant::factory()->create()->id,
+    ]);
 
     $response = $this->actingAs($user)->get('/restaurant');
 

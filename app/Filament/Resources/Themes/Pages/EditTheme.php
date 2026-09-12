@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Themes\Pages;
 
+use App\Filament\Resources\Concerns\HandlesImageUrl;
 use App\Filament\Resources\Themes\ThemeResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -10,7 +11,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditTheme extends EditRecord
 {
+    use HandlesImageUrl;
+
     protected static string $resource = ThemeResource::class;
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return $this->mergeImageUrls($data, ['preview_image']);
+    }
 
     protected function getHeaderActions(): array
     {

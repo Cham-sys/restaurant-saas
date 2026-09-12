@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class Theme extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'slug',
@@ -77,12 +78,12 @@ class Theme extends Model
 
     public function hasThemeJson(): bool
     {
-        return file_exists($this->getThemePath() . '/theme.json');
+        return file_exists($this->getThemePath().'/theme.json');
     }
 
     public function loadThemeJson(): ?array
     {
-        $path = $this->getThemePath() . '/theme.json';
+        $path = $this->getThemePath().'/theme.json';
 
         if (! file_exists($path)) {
             return null;
@@ -116,7 +117,7 @@ class Theme extends Model
             ->delete();
     }
 
-    public function duplicate(string $name = null): ?self
+    public function duplicate(?string $name = null): ?self
     {
         $sourcePath = $this->getThemePath();
 

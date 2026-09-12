@@ -1,5 +1,9 @@
 @extends("themes.burger-theme.layout")
 
+@push('head')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+@endpush
+
 @section('content')
     <section class="py-16 bg-gray-50 min-h-screen">
         <div class="container mx-auto px-4 max-w-4xl">
@@ -12,6 +16,19 @@
                 <p class="text-gray-600">رقم التتبع: <span
                         class="font-mono font-bold text-primary text-lg">{{ $order->tracking_code }}</span></p>
             </div>
+
+            @if($order->delivery_latitude && $order->delivery_longitude)
+                <div class="mb-8 rounded-3xl bg-white p-5 shadow-lg">
+                    <div class="mb-4 flex items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-xl font-black text-gray-800">تتبع المندوب على الخريطة</h3>
+                            <p id="tracking-status" class="mt-1 text-sm text-gray-500">جاري تحميل موقع المندوب...</p>
+                        </div>
+                        <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">تحديث مباشر</span>
+                    </div>
+                    <div id="tracking-map" class="h-80 rounded-2xl"></div>
+                </div>
+            @endif
 
             <!-- بطاقة الحالة الرئيسية -->
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden mb-8 border border-gray-100">
@@ -143,7 +160,7 @@
                             class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b last:border-0 last:pb-0">
                             <div class="flex items-center gap-4">
                                 @if($item->product && $item->product->image)
-                                    <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}"
+                                    <img src="{{ media_url($item->product->image) }}" alt="{{ $item->product->name }}"
                                         class="w-16 h-16 rounded-2xl object-cover border border-orange-100">
                                 @else
                                     <div
@@ -233,6 +250,34 @@
                 </div>
             </div>
     </section>
+    @if($order->delivery_latitude && $order->delivery_longitude)
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+        <script>
+            const customerPoint = [{{ $order->delivery_latitude }}, {{ $order->delivery_longitude }}];
+            const trackingMap = L.map('tracking-map').fitBounds([customerPoint], { padding: [40, 40] });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(trackingMap);
+            L.marker(customerPoint).addTo(trackingMap).bindPopup('موقع التوصيل').openPopup();
+            let driverMarker;
+
+            async function refreshDriverLocation() {
+                const response = await fetch('{{ route('order.track.location', [$restaurant->slug, $order->tracking_code]) }}');
+                if (!response.ok) return;
+                const data = await response.json();
+                if (data.driver.latitude && data.driver.longitude) {
+                    const point = [Number(data.driver.latitude), Number(data.driver.longitude)];
+                    driverMarker = driverMarker || L.marker(point).addTo(trackingMap).bindPopup('المندوب');
+                    driverMarker.setLatLng(point);
+                    trackingMap.fitBounds([customerPoint, point], { padding: [40, 40] });
+                    document.getElementById('tracking-status').textContent = data.driver.updated_at ? `آخر تحديث: ${new Date(data.driver.updated_at).toLocaleTimeString('ar')}` : 'تم تحديث موقع المندوب.';
+                } else {
+                    document.getElementById('tracking-status').textContent = 'سيظهر موقع المندوب بعد بدء التوصيل.';
+                }
+            }
+
+            refreshDriverLocation();
+            setInterval(refreshDriverLocation, 10000);
+        </script>
+    @endif
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const trackUrl = "{{ route('order.track', [$restaurant->slug, $order->tracking_code]) }}";

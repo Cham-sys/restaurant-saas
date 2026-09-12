@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'restaurant_id',
         'name',
@@ -15,6 +18,7 @@ class Category extends Model
         'sort_order',
         'is_active',
     ];
+
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
@@ -39,16 +43,15 @@ class Category extends Model
     /**
      * تعيين المطعم تلقائياً عند الإنشاء
      */
-    
     protected static function boot()
     {
         parent::boot();
-        if(auth()->check() && auth()->user()->role != 'super_admin' ) {
-        static::creating(function ($category) {
-            if (auth()->check() && auth()->user()->restaurant_id) {
-                $category->restaurant_id = auth()->user()->restaurant_id;
-            }
-        });
+        if (auth()->check() && auth()->user()->role != 'super_admin') {
+            static::creating(function ($category) {
+                if (auth()->check() && auth()->user()->restaurant_id) {
+                    $category->restaurant_id = auth()->user()->restaurant_id;
+                }
+            });
         }
     }
 }

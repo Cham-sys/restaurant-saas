@@ -13,7 +13,7 @@ class CartController extends Controller
     {
         // جلب بيانات المطعم لعرضها في الهيدر والفوتر
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
-        
+
         // جلب محتويات السلة من الجلسة
         $cart = session('cart', []);
         $products = [];
@@ -21,18 +21,19 @@ class CartController extends Controller
 
         // حساب تفاصيل كل منتج في السلة
         foreach ($cart as $id => $details) {
-            $product = Product::find($id);
+            $product = Product::where('restaurant_id', $restaurant->id)->find($id);
             if ($product) {
                 $products[] = [
                     'product' => $product,
                     'qty' => $details['qty'],
                     'price' => $product->price,
-                    'subtotal' => $product->price * $details['qty']
+                    'subtotal' => $product->price * $details['qty'],
                 ];
                 $total += $product->price * $details['qty'];
             }
         }
         $themeName = ThemeHelper::getThemePath($restaurant);
+
         return view("themes.{$themeName}.cart.cart", compact('restaurant', 'products', 'total'));
     }
 
@@ -41,19 +42,36 @@ class CartController extends Controller
      */
     public function add(Request $request, $slug)
     {
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
         ]);
 
+        $product = Product::where('restaurant_id', $restaurant->id)
+            ->where('is_available', true)
+            ->findOrFail($request->product_id);
         $cart = session('cart', []);
-        $productId = $request->product_id;
+
+        $cartHasAnotherRestaurantProduct = Product::whereIn('id', array_keys($cart))
+            ->where('restaurant_id', '!=', $restaurant->id)
+            ->exists();
+
+        if ($cartHasAnotherRestaurantProduct) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن جمع منتجات مطعمين في سلة واحدة',
+            ], 422);
+        }
+
+        $productId = $product->id;
         $quantity = $request->quantity;
 
         if (isset($cart[$productId])) {
             $cart[$productId]['qty'] += $quantity;
         } else {
-            $cart[$productId] = ["qty" => $quantity];
+            $cart[$productId] = ['qty' => $quantity];
         }
 
         session(['cart' => $cart]);
@@ -64,12 +82,12 @@ class CartController extends Controller
         $count = 0;
 
         foreach ($cart as $id => $details) {
-            $product = \App\Models\Product::find($id);
+            $product = Product::where('restaurant_id', $restaurant->id)->find($id);
             if ($product) {
                 $count += $details['qty'];
                 $total += $product->price * $details['qty'];
                 $imageUrl = $product->image ? asset('storage/'.$product->image) : 'https://via.placeholder.com/50';
-                
+
                 $cartHtml .= '
                     <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
                         <img src="'.$imageUrl.'" class="w-12 h-12 rounded-md object-cover">
@@ -93,7 +111,7 @@ class CartController extends Controller
                 'message' => 'تمت إضافة المنتج للسلة بنجاح! 🛒',
                 'count' => $count,
                 'total' => number_format($total, 2),
-                'cart_html' => $cartHtml
+                'cart_html' => $cartHtml,
             ]);
         }
 
@@ -105,14 +123,17 @@ class CartController extends Controller
      */
     public function update(Request $request, $slug)
     {
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
         ]);
 
+        Product::where('restaurant_id', $restaurant->id)->findOrFail($request->product_id);
         $cart = session('cart', []);
-        
-        if(isset($cart[$request->product_id])) {
+
+        if (isset($cart[$request->product_id])) {
             $cart[$request->product_id]['qty'] = $request->quantity;
             session(['cart' => $cart]);
         }
@@ -125,13 +146,16 @@ class CartController extends Controller
      */
     public function remove(Request $request, $slug)
     {
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+
         $request->validate([
-            'product_id' => 'required|exists:products,id'
+            'product_id' => 'required|exists:products,id',
         ]);
 
+        Product::where('restaurant_id', $restaurant->id)->findOrFail($request->product_id);
         $cart = session('cart', []);
-        
-        if(isset($cart[$request->product_id])) {
+
+        if (isset($cart[$request->product_id])) {
             unset($cart[$request->product_id]);
             session(['cart' => $cart]);
         }

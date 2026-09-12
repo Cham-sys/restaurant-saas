@@ -2,15 +2,14 @@
 
 namespace App\Filament\Resources\Offers\Tables;
 
-use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class OffersTable
@@ -21,6 +20,7 @@ class OffersTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('الصورة')
+                    ->disk('public')
                     ->circular()
                     ->default('https://via.placeholder.com/50'),
 
@@ -39,17 +39,17 @@ class OffersTable
                         'warning' => 'fixed_amount',
                         'info' => 'free_shipping',
                     ])
-                    ->formatStateUsing(fn($state) => match($state) {
-                        'percentage'    => 'نسبة مئوية',
-                        'fixed_amount'  => 'مبلغ ثابت',
-                        'free_product'  => 'منتج مجاني',
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'percentage' => 'نسبة مئوية',
+                        'fixed_amount' => 'مبلغ ثابت',
+                        'free_product' => 'منتج مجاني',
                         'free_shipping' => 'شحن مجاني',
-                        default         => $state,
+                        default => $state,
                     }),
 
                 TextColumn::make('value')
                     ->label('القيمة')
-                    ->formatStateUsing(fn($record) => $record->getDiscountLabel())
+                    ->formatStateUsing(fn ($record) => $record->getDiscountLabel())
                     ->sortable(),
 
                 ToggleColumn::make('is_active')
@@ -58,8 +58,7 @@ class OffersTable
                 TextColumn::make('used_count')
                     ->label('الاستخدامات')
                     ->sortable()
-                    ->formatStateUsing(fn($record) => 
-                        $record->used_count . ' / ' . ($record->max_uses ?? '∞')
+                    ->formatStateUsing(fn ($record) => $record->used_count.' / '.($record->max_uses ?? '∞')
                     ),
 
                 TextColumn::make('starts_at')
@@ -84,9 +83,9 @@ class OffersTable
                 SelectFilter::make('type')
                     ->label('النوع')
                     ->options([
-                        'percentage'    => 'نسبة مئوية',
-                        'fixed_amount'  => 'مبلغ ثابت',
-                        'free_product'  => 'منتج مجاني',
+                        'percentage' => 'نسبة مئوية',
+                        'fixed_amount' => 'مبلغ ثابت',
+                        'free_product' => 'منتج مجاني',
                         'free_shipping' => 'شحن مجاني',
                     ]),
 
@@ -95,10 +94,10 @@ class OffersTable
                     ->trueLabel('نشط')
                     ->falseLabel('غير نشط'),
             ])
-            ->recordActions([                
+            ->recordActions([
                 EditAction::make(),
             ])
-            ->toolbarActions([              
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

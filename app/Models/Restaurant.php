@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class Restaurant extends Model
 {
     use HasFactory, SoftDeletes;
@@ -37,7 +36,7 @@ class Restaurant extends Model
         'commission_rate',
         'subscription_fee',
         'is_active',
-        'trial_ends_at'
+        'trial_ends_at',
     ];
 
     protected $casts = [
@@ -49,7 +48,7 @@ class Restaurant extends Model
     ];
 
     // Relationships
-    
+
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
@@ -63,6 +62,11 @@ class Restaurant extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function tables(): HasMany
+    {
+        return $this->hasMany(RestaurantTable::class);
     }
 
     // Scopes
@@ -79,13 +83,15 @@ class Restaurant extends Model
 
     public function getFullSubdomainAttribute(): string
     {
-        return $this->subdomain ? "{$this->subdomain}." . config('app.domain') : $this->slug;
+        return $this->subdomain ? "{$this->subdomain}.".config('app.domain') : $this->slug;
     }
+
     // العلاقة مع التقييمات
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
+
     public function offers(): HasMany
     {
         return $this->hasMany(Offer::class);
@@ -119,19 +125,19 @@ class Restaurant extends Model
     // Helper Methods
     public function getThemePath(): string
     {
-        if (!$this->theme) {
+        if (! $this->theme) {
             return 'burger-theme'; // الثيم الافتراضي
         }
-        
+
         return $this->theme->folder_name;
     }
 
     public function getThemeSettings(): array
     {
-        if (!$this->themeSettings) {
+        if (! $this->themeSettings) {
             return $this->theme->default_settings ?? [];
         }
-        
+
         return $this->themeSettings->getMergedSettings();
     }
 

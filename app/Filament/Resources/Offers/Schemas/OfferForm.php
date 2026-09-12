@@ -3,11 +3,12 @@
 namespace App\Filament\Resources\Offers\Schemas;
 
 use App\Models\Product;
+use App\Models\Restaurant;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -27,36 +28,39 @@ class OfferForm
                             ->maxLength(255)
                             ->placeholder('مثال: خصم 20% على جميع المنتجات')
                             ->columnSpan(2),
-                        
-                        
+
                         Select::make('restaurant_id')
                             ->label('id المطعم')
                             ->required()
                             ->options(function () {
-                                return \App\Models\Restaurant::pluck('name', 'id');
+                                return Restaurant::pluck('name', 'id');
                             })
                             ->placeholder('اختر المطعم')
                             ->columnSpan(2)
                             ->visible(function ($get) {
                                 return auth()->user()->role === 'super_admin';
                             }),
-                            
-                        
-                        
+
                         Textarea::make('description')
                             ->label('وصف العرض')
                             ->rows(3)
                             ->maxLength(1000)
                             ->placeholder('اكتب وصفاً جذاباً للعرض...')
                             ->columnSpanFull(),
-                        
+
                         FileUpload::make('image')
                             ->label('صورة العرض')
                             ->image()
+                            ->disk('public')
                             ->directory('offers')
                             ->maxSize(2048)
                             ->columnSpan(2),
-                        
+                        TextInput::make('image_url')
+                            ->label('أو رابط صورة العرض')
+                            ->url()
+                            ->maxLength(2048)
+                            ->columnSpan(2),
+
                         Toggle::make('is_active')
                             ->label('نشط')
                             ->default(true)
@@ -78,7 +82,7 @@ class OfferForm
                             ->reactive()
                             ->default('percentage')
                             ->columnSpan(2),
-                        
+
                         TextInput::make('value')
                             ->label('قيمة الخصم')
                             ->numeric()
@@ -88,7 +92,7 @@ class OfferForm
                             ->default(0)
                             ->placeholder('0')
                             ->helperText(function ($get) {
-                                return match($get('type')) {
+                                return match ($get('type')) {
                                     'percentage' => 'النسبة المئوية (مثال: 20)',
                                     'fixed_amount' => 'المبلغ بالريال (مثال: 10)',
                                     default => 'اتركه 0',
@@ -98,7 +102,7 @@ class OfferForm
                                 return in_array($get('type'), ['percentage', 'fixed_amount']);
                             })
                             ->columnSpan(2),
-                        
+
                         TextInput::make('min_order_amount')
                             ->label('الحد الأدنى للطلب (ل.س)')
                             ->numeric()
@@ -118,7 +122,7 @@ class OfferForm
                             ->minDate(now())
                             ->helperText('اتركه فارغاً للبدء فوراً')
                             ->columnSpan(2),
-                        
+
                         DateTimePicker::make('ends_at')
                             ->label('تاريخ النهاية')
                             ->native(false)
@@ -126,7 +130,7 @@ class OfferForm
                             ->afterOrEqual('starts_at')
                             ->helperText('اتركه فارغاً لعرض غير محدود')
                             ->columnSpan(2),
-                        
+
                         TextInput::make('max_uses')
                             ->label('الحد الأقصى للاستخدامات')
                             ->numeric()
@@ -145,11 +149,12 @@ class OfferForm
                             ->reactive()
                             ->helperText('إذا تم تعطيله، يمكنك اختيار منتجات محددة')
                             ->columnSpanFull(),
-                        
+
                         Select::make('product_ids')
                             ->label('اختر المنتجات')
                             ->options(function () {
                                 $restaurantId = auth()->user()->restaurant_id;
+
                                 return Product::where('restaurant_id', $restaurantId)
                                     ->pluck('name', 'id')
                                     ->toArray();
@@ -157,16 +162,16 @@ class OfferForm
                             ->multiple()
                             ->preload()
                             ->searchable()
-                            ->visible(fn($get) => !$get('apply_to_all'))
+                            ->visible(fn ($get) => ! $get('apply_to_all'))
                             ->helperText('اختر المنتجات التي ينطبق عليها العرض')
                             ->columnSpanFull(),
                     ]),
 
                 // حقول مخفية
                 TextInput::make('restaurant_id')
-                    ->default(fn() => auth()->user()->restaurant_id)
+                    ->default(fn () => auth()->user()->restaurant_id)
                     ->hidden(),
-                
+
                 TextInput::make('used_count')
                     ->default(0)
                     ->hidden(),

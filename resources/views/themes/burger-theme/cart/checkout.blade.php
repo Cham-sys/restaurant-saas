@@ -1,5 +1,9 @@
 @extends("themes.burger-theme.layout")
 
+@push('head')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+@endpush
+
 @section('content')
 <section class="py-16 bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 max-w-4xl">
@@ -11,7 +15,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <!-- بيانات العميل -->
                 <div class="space-y-4">
-                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">بيانات التوصيل</h3>
+                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">{{ $table ? 'طلب داخل المطعم' : 'بيانات التوصيل' }}</h3>
+                    @if($table)
+                        <div class="rounded-xl bg-orange-50 p-4 text-sm text-orange-800">أنت تطلب من الطاولة <strong>{{ $table->number }}</strong>. سيصل الطلب إلى المطبخ مباشرة.</div>
+                    @endif
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
                         <input type="text" name="name" required class="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
@@ -20,10 +27,14 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
                         <input type="tel" name="phone" id="customer-phone" required class="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
                     </div>
-                    <div>
+                    @if(!$table)<div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">العنوان بالتفصيل</label>
-                        <textarea name="address" rows="3" required class="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary"></textarea>
-                    </div>
+                        <textarea name="address" id="address" rows="3" class="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="وصف اختياري: الطابق، رقم الشقة، علامة مميزة..."></textarea>
+                        <div id="checkout-map" class="mt-3 h-64 rounded-xl border border-gray-200"></div>
+                        <p id="map-status" class="mt-2 text-sm text-gray-500">اضغط على الخريطة لتحديد موقع المنزل.</p>
+                        <input type="hidden" name="latitude" id="latitude" required>
+                        <input type="hidden" name="longitude" id="longitude" required>
+                    </div>@endif
                 </div>
 
                 <!-- ملخص الدفع -->
@@ -145,7 +156,32 @@
     </div>
 </section>
 
+@if(!$table)<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>@endif
+
 <script>
+    @if(!$table)
+    const defaultLocation = [33.5138, 36.2765];
+    const checkoutMap = L.map('checkout-map').setView(defaultLocation, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(checkoutMap);
+    let checkoutMarker;
+
+    function setCheckoutLocation(latitude, longitude) {
+        document.getElementById('latitude').value = latitude;
+        document.getElementById('longitude').value = longitude;
+        document.getElementById('map-status').textContent = `تم تحديد الموقع: ${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`;
+        checkoutMarker = checkoutMarker || L.marker([latitude, longitude]).addTo(checkoutMap);
+        checkoutMarker.setLatLng([latitude, longitude]);
+    }
+
+    checkoutMap.on('click', (event) => setCheckoutLocation(event.latlng.lat, event.latlng.lng));
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            checkoutMap.setView([position.coords.latitude, position.coords.longitude], 16);
+            setCheckoutLocation(position.coords.latitude, position.coords.longitude);
+        });
+    }
+    @endif
+
     let appliedCouponId = null;
     let couponDiscount = 0;
     

@@ -5,7 +5,7 @@
 <!-- Hero Section -->
 <section class="relative py-20 overflow-hidden">
     @if($restaurant->cover_image)
-        <img src="{{ asset('storage/' . $restaurant->cover_image) }}" 
+        <img src="{{ media_url($restaurant->cover_image) }}"
              alt="{{ $restaurant->name }}" 
              class="absolute inset-0 w-full h-full object-cover">
         <div class="absolute inset-0 bg-black bg-opacity-60"></div>
@@ -18,6 +18,12 @@
         <p class="text-xl md:text-2xl">اكتشف أشهى الأطباق لدينا</p>
     </div>
 </section>
+
+@if($table)
+    <div class="mx-auto mt-6 max-w-5xl rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 text-center text-orange-900">
+        أنت الآن تطلب من <strong>الطاولة {{ $table->number }}</strong>. بعد التأكيد سيصل الطلب مباشرة إلى المطبخ.
+    </div>
+@endif
 
 <!-- Menu Section -->
 <section class="py-16 bg-gray-50">
@@ -55,7 +61,7 @@
                                     <!-- صورة المنتج -->
                                     <div class="relative h-56 overflow-hidden">
                                         @if($product->image)
-                                            <img src="{{ asset('storage/' . $product->image) }}" 
+                                            <img src="{{ media_url($product->image) }}"
                                                  alt="{{ $product->name }}" 
                                                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                         @else

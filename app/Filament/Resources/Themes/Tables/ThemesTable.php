@@ -27,6 +27,7 @@ class ThemesTable
             ->columns([
                 ImageColumn::make('preview_image')
                     ->label('معاينة')
+                    ->disk('public')
                     ->size(80),
 
                 TextColumn::make('name')

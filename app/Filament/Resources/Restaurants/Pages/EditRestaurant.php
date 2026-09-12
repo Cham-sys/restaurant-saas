@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Restaurants\Pages;
 
+use App\Filament\Resources\Concerns\HandlesImageUrl;
 use App\Filament\Resources\Restaurants\RestaurantResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -10,7 +11,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditRestaurant extends EditRecord
 {
+    use HandlesImageUrl;
+
     protected static string $resource = RestaurantResource::class;
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return $this->mergeImageUrls($data, ['logo', 'cover_image', 'qr_code_image']);
+    }
 
     protected function getHeaderActions(): array
     {

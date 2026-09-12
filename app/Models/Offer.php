@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Offer extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'restaurant_id',
         'title',
@@ -44,13 +48,13 @@ class Offer extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('max_uses')->orWhereColumn('used_count', '<', 'max_uses');
             });
     }
@@ -58,19 +62,27 @@ class Offer extends Model
     // Helper Methods
     public function isCurrentlyActive(): bool
     {
-        if (!$this->is_active) return false;
-        
-        if ($this->starts_at && $this->starts_at->isFuture()) return false;
-        if ($this->ends_at && $this->ends_at->isPast()) return false;
-        
-        if ($this->max_uses && $this->used_count >= $this->max_uses) return false;
-        
+        if (! $this->is_active) {
+            return false;
+        }
+
+        if ($this->starts_at && $this->starts_at->isFuture()) {
+            return false;
+        }
+        if ($this->ends_at && $this->ends_at->isPast()) {
+            return false;
+        }
+
+        if ($this->max_uses && $this->used_count >= $this->max_uses) {
+            return false;
+        }
+
         return true;
     }
 
     public function getDiscountLabel(): string
     {
-        return match($this->type) {
+        return match ($this->type) {
             'percentage' => "خصم {$this->value}%",
             'fixed_amount' => "خصم {$this->value} ر.س",
             'free_product' => 'منتج مجاني',
@@ -84,7 +96,7 @@ class Offer extends Model
             return 0;
         }
 
-        return match($this->type) {
+        return match ($this->type) {
             'percentage' => ($subtotal * $this->value) / 100,
             'fixed_amount' => min($this->value, $subtotal),
             'free_product' => 0, // يُحسب بشكل منفصل
@@ -105,19 +117,21 @@ class Offer extends Model
     {
         return $this->belongsToMany(Product::class, 'offer_product', 'offer_id', 'product_id');
     }
+
     public function incrementUsage(): void
     {
         $this->increment('used_count');
     }
+
     protected static function boot()
     {
         parent::boot();
-        if(auth()->check() && auth()->user()->role != 'super_admin' ) {
-        static::creating(function ($category) {
-            if (auth()->check() && auth()->user()->restaurant_id) {
-                $category->restaurant_id = auth()->user()->restaurant_id;
-            }
-        });
+        if (auth()->check() && auth()->user()->role != 'super_admin') {
+            static::creating(function ($category) {
+                if (auth()->check() && auth()->user()->restaurant_id) {
+                    $category->restaurant_id = auth()->user()->restaurant_id;
+                }
+            });
         }
     }
 }

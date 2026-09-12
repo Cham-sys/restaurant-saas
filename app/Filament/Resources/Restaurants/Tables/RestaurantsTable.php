@@ -32,7 +32,8 @@ class RestaurantsTable
                     ->label('شعار')
                     ->searchable(),
                 ImageColumn::make('cover_image')
-                    ->label('صورة الغلاف'),
+                    ->label('صورة الغلاف')
+                    ->disk('public'),
                 TextColumn::make('phone')
                     ->label('رقم الهاتف')
                     ->searchable(),
@@ -65,7 +66,8 @@ class RestaurantsTable
                     ->label('لون الخلفية')
                     ->searchable(),
                 ImageColumn::make('qr_code_image')
-                    ->label('صورة الكود QR'),
+                    ->label('صورة الكود QR')
+                    ->disk('public'),
                 TextColumn::make('pricing_type')
                     ->label('نوع التسعير')
                     ->searchable(),

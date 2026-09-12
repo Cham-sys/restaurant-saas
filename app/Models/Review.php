@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Review extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'order_id',
         'restaurant_id',
@@ -15,7 +18,6 @@ class Review extends Model
         'rating',
         'comment',
     ];
-
 
     // العلاقات
     public function order(): BelongsTo
@@ -34,12 +36,11 @@ class Review extends Model
         return $this->morphMany(Image::class, 'imageable')->orderBy('sort_order');
     }
 
-
     // حساب متوسط التقييم للمطعم
     public static function averageRating($restaurantId)
     {
         return self::where('restaurant_id', $restaurantId)
-            
+
             ->avg('rating');
     }
 }

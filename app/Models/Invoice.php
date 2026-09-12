@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Invoice extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'order_id',
         'restaurant_id',
@@ -30,15 +33,16 @@ class Invoice extends Model
     {
         return $this->belongsTo(Restaurant::class);
     }
+
     protected static function boot()
     {
         parent::boot();
-        if(auth()->check() && auth()->user()->role != 'super_admin' ) {
-        static::creating(function ($category) {
-            if (auth()->check() && auth()->user()->restaurant_id) {
-                $category->restaurant_id = auth()->user()->restaurant_id;
-            }
-        });
+        if (auth()->check() && auth()->user()->role != 'super_admin') {
+            static::creating(function ($category) {
+                if (auth()->check() && auth()->user()->restaurant_id) {
+                    $category->restaurant_id = auth()->user()->restaurant_id;
+                }
+            });
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -9,7 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'restaurant_id',
         'category_id',
@@ -23,16 +25,17 @@ class Product extends Model
         'is_featured',
         'sort_order',
     ];
+
     public function restaurant()
     {
         return $this->belongsTo(Restaurant::class);
     }
 
-
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
+
     // صور المنتج (علاقة متعددة)
     public function images(): MorphMany
     {
@@ -44,6 +47,7 @@ class Product extends Model
     {
         return $this->morphOne(Image::class, 'imageable')->where('is_primary', true);
     }
+
     protected static function boot()
     {
         parent::boot();

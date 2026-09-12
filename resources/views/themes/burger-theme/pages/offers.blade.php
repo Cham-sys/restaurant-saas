@@ -36,7 +36,7 @@
                         <!-- صورة العرض -->
                         <div class="relative h-48 overflow-hidden">
                             @if($offer->image)
-                                <img src="{{ asset('storage/' . $offer->image) }}" 
+                                <img src="{{ media_url($offer->image) }}"
                                      alt="{{ $offer->title }}" 
                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                             @else
