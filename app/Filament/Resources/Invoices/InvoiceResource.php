@@ -9,18 +9,28 @@ use App\Filament\Resources\Invoices\Schemas\InvoiceForm;
 use App\Filament\Resources\Invoices\Tables\InvoicesTable;
 use App\Models\Invoice;
 use BackedEnum;
-use Filament\Forms\Components\Builder;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use UnitEnum;
 
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static string|UnitEnum|null $navigationGroup = 'التشغيل';
+
+    protected static ?string $navigationLabel = 'الفواتير';
+
+    protected static ?string $modelLabel = 'فاتورة';
+
+    protected static ?string $pluralModelLabel = 'الفواتير';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'الفوانير';
 
@@ -49,22 +59,23 @@ class InvoiceResource extends Resource
             'edit' => EditInvoice::route('/{record}/edit'),
         ];
     }
+
     public static function getEloquentQuery(): EloquentBuilder
     {
         $query = parent::getEloquentQuery();
-        
+
         $user = auth()->user();
-        
+
         // إذا كان Super Admin، يرى كل الفواتير
         if ($user && $user->role === 'super_admin') {
             return $query;
         }
-        
+
         // إذا كان مدير مطعم، يرى فواتير مطعمه فقط
         if ($user && filled($user->restaurant_id)) {
             $query->where('restaurant_id', $user->restaurant_id);
         }
-        
+
         return $query;
     }
 }

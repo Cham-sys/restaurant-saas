@@ -16,6 +16,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -49,6 +50,13 @@ class RestaurantPanelProvider extends PanelProvider
             ->font('Tajawal')
             ->spa() // تفعيل SPA
             ->sidebarCollapsibleOnDesktop()
+            ->collapsibleNavigationGroups()
+            ->navigationGroups([
+                NavigationGroup::make('التشغيل')->icon('heroicon-o-command-line'),
+                NavigationGroup::make('القائمة')->icon('heroicon-o-clipboard-document-list'),
+                NavigationGroup::make('التسويق')->icon('heroicon-o-megaphone'),
+                NavigationGroup::make('الإعدادات')->icon('heroicon-o-cog-6-tooth'),
+            ])
             ->darkMode(false)
             ->viteTheme('resources/css/filament/restaurant/theme.css')
             ->resources([

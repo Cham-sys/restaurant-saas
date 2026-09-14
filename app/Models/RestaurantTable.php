@@ -41,4 +41,14 @@ class RestaurantTable extends Model
 
         return request()->getSchemeAndHttpHost().$path;
     }
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($product) {
+            if (auth()->check() && auth()->user()->restaurant_id) {
+                $product->restaurant_id = auth()->user()->restaurant_id;
+            }
+        });
+    }
 }

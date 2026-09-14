@@ -16,6 +16,7 @@ use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,36 +24,51 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        $theme = Theme::factory()->create([
-            'name' => 'برجر كلاسيك',
-            'slug' => 'burger-theme',
-            'folder_name' => 'burger-theme',
-            'is_default' => true,
-        ]);
+        $theme = Theme::query()->updateOrCreate(
+            ['slug' => 'burger-theme'],
+            [
+                'name' => 'برجر كلاسيك',
+                'folder_name' => 'burger-theme',
+                'is_default' => true,
+                'is_active' => true,
+                'version' => '1.0.0',
+            ]
+        );
 
-        $restaurant = Restaurant::factory()->create([
-            'name' => 'برجر هاوس',
-            'slug' => 'burger-house',
-            'subdomain' => 'burger-house',
-            'theme_id' => $theme->id,
-        ]);
+        $restaurant = Restaurant::query()->updateOrCreate(
+            ['slug' => 'burger-house'],
+            [
+                'name' => 'برجر هاوس',
+                'subdomain' => 'burger-house',
+                'theme_id' => $theme->id,
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'مدير المطعم',
-            'email' => 'admin@example.com',
-            'role' => 'restaurant_admin',
-            'restaurant_id' => $restaurant->id,
-        ]);
-        $customer = User::factory()->create([
-            'name' => 'عميل تجريبي',
-            'email' => 'customer@example.com',
-            'role' => 'customer',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'مدير المطعم',
+                'role' => 'restaurant_admin',
+                'restaurant_id' => $restaurant->id,
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $customer = User::query()->updateOrCreate(
+            ['email' => 'customer@example.com'],
+            [
+                'name' => 'عميل تجريبي',
+                'role' => 'customer',
+                'restaurant_id' => null,
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
 
-        RestaurantThemeSetting::factory()->create([
-            'restaurant_id' => $restaurant->id,
-            'theme_id' => $theme->id,
-        ]);
+        RestaurantThemeSetting::query()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id],
+            ['theme_id' => $theme->id]
+        );
 
         $categories = Category::factory(2)->create(['restaurant_id' => $restaurant->id]);
         $products = Product::factory(3)->create([
@@ -62,10 +78,10 @@ class DatabaseSeeder extends Seeder
 
         $offer = Offer::factory()->create(['restaurant_id' => $restaurant->id]);
         $offer->products()->attach($products->take(2)->modelKeys());
-        $coupon = Coupon::factory()->create([
-            'restaurant_id' => $restaurant->id,
-            'code' => 'WELCOME20',
-        ]);
+        $coupon = Coupon::query()->updateOrCreate(
+            ['code' => 'WELCOME20'],
+            ['restaurant_id' => $restaurant->id]
+        );
 
         $order = Order::factory()->create([
             'restaurant_id' => $restaurant->id,
@@ -101,10 +117,27 @@ class DatabaseSeeder extends Seeder
             'rating' => 5,
         ]);
 
-        User::factory()->create([
-            'name' => 'مدير النظام',
-            'email' => 'super@example.com',
-            'role' => 'super_admin',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'super@example.com'],
+            [
+                'name' => 'مدير النظام',
+                'role' => 'super_admin',
+                'restaurant_id' => null,
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $this->call(DeliveryTrackingSeeder::class);
+
+        $this->command?->newLine();
+        $this->command?->info('بيانات الدخول العامة للاختبار');
+        $this->command?->line('مدير المطعم');
+        $this->command?->line('  Email: admin@example.com');
+        $this->command?->line('  Password: password');
+        $this->command?->line('مدير النظام');
+        $this->command?->line('  Email: super@example.com');
+        $this->command?->line('  Password: password');
+        $this->command?->line('للدخول إلى لوحة المندوب استخدم: /driver/orders');
     }
 }

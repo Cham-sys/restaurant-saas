@@ -11,9 +11,9 @@ use App\Models\Coupon;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class CouponResource extends Resource
 {
@@ -23,11 +23,13 @@ class CouponResource extends Resource
 
     protected static ?string $navigationLabel = 'كوبونات الخصم';
 
+    protected static string|UnitEnum|null $navigationGroup = 'التسويق';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $modelLabel = 'كوبون';
 
     protected static ?string $pluralModelLabel = 'كوبونات الخصم';
-
-    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'Coupon';
 
@@ -47,14 +49,15 @@ class CouponResource extends Resource
             //
         ];
     }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
-        
+
         if (auth()->user()->restaurant_id) {
             $query->where('restaurant_id', auth()->user()->restaurant_id);
         }
-        
+
         return $query;
     }
 

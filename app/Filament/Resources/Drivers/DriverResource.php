@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class DriverResource extends Resource
 {
@@ -21,6 +22,10 @@ class DriverResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-truck';
 
     protected static ?string $navigationLabel = 'مندوبو التوصيل';
+
+    protected static string|UnitEnum|null $navigationGroup = 'التشغيل';
+
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $modelLabel = 'مندوب';
 

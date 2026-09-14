@@ -32,6 +32,60 @@ it('allows an assigned driver to update a delivery location', function () {
         ->status->toBe('on_way');
 });
 
+it('shows only the driver orders and completes delivery transitions', function () {
+    $restaurant = Restaurant::factory()->create();
+    $driver = User::factory()->create([
+        'role' => 'driver',
+        'restaurant_id' => $restaurant->id,
+    ]);
+    $order = Order::factory()->create([
+        'restaurant_id' => $restaurant->id,
+        'driver_id' => $driver->id,
+        'status' => 'on_way',
+    ]);
+
+    $this->actingAs($driver)
+        ->get(route('driver.orders'))
+        ->assertSuccessful()
+        ->assertSee($order->tracking_code)
+        ->assertSee($order->customer_name);
+
+    $this->actingAs($driver)
+        ->get(route('dashboard'))
+        ->assertSuccessful()
+        ->assertSee('لوحة المندوب')
+        ->assertSee($order->tracking_code);
+
+    $this->actingAs($driver)
+        ->get(route('driver.order.tracking', $order))
+        ->assertSuccessful()
+        ->assertSee('نظام تتبع الطلبات والتوصيل')
+        ->assertSee($order->tracking_code);
+
+    $this->actingAs($driver)
+        ->getJson(route('driver.order.show', $order))
+        ->assertSuccessful()
+        ->assertJsonPath('tracking_code', $order->tracking_code)
+        ->assertJsonPath('status', 'on_way');
+
+    $this->actingAs($driver)
+        ->postJson(route('driver.status.update', $order), ['status' => 'delivered'])
+        ->assertSuccessful()
+        ->assertJsonPath('status', 'delivered');
+
+    expect($order->fresh()->status)->toBe('delivered');
+});
+
+it('does not expose an unassigned order to a driver', function () {
+    $restaurant = Restaurant::factory()->create();
+    $driver = User::factory()->create(['role' => 'driver', 'restaurant_id' => $restaurant->id]);
+    $order = Order::factory()->create(['restaurant_id' => $restaurant->id, 'status' => 'ready']);
+
+    $this->actingAs($driver)
+        ->getJson(route('driver.order.show', $order))
+        ->assertForbidden();
+});
+
 it('does not allow a driver to update another restaurant order', function () {
     $restaurant = Restaurant::factory()->create();
     $otherRestaurant = Restaurant::factory()->create();
@@ -51,4 +105,24 @@ it('does not allow a driver to update another restaurant order', function () {
             'longitude' => 36.21,
         ])
         ->assertForbidden();
+});
+
+it('stops accepting location updates after delivery', function () {
+    $restaurant = Restaurant::factory()->create();
+    $driver = User::factory()->create([
+        'role' => 'driver',
+        'restaurant_id' => $restaurant->id,
+    ]);
+    $order = Order::factory()->create([
+        'restaurant_id' => $restaurant->id,
+        'driver_id' => $driver->id,
+        'status' => 'delivered',
+    ]);
+
+    $this->actingAs($driver)
+        ->postJson(route('driver.location.update', $order), [
+            'latitude' => 33.51,
+            'longitude' => 36.21,
+        ])
+        ->assertUnprocessable();
 });

@@ -12,8 +12,8 @@
                 <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                     <span class="text-6xl">🎉</span>
                 </div>
-                <h1 class="text-3xl font-black mb-2">تم استلام طلبك بنجاح!</h1>
-                <p class="text-green-50">سنبدأ في تحضير طلبك فوراً</p>
+                <h1 class="text-3xl text-green-500 font-black mb-2">تم استلام طلبك بنجاح!</h1>
+                <p class="text-green-500">سنبدأ في تحضير طلبك فوراً</p>
             </div>
 
             <!-- محتوى البطاقة -->

@@ -8,13 +8,14 @@ use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
 use App\Models\Category;
+use App\Models\User;
 use App\Policies\CategoryPolicy;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class CategoryResource extends Resource
 {
@@ -26,11 +27,13 @@ class CategoryResource extends Resource
 
     protected static ?string $navigationLabel = 'التصنيفات';
 
+    protected static string|UnitEnum|null $navigationGroup = 'القائمة';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $modelLabel = 'تصنيف';
 
     protected static ?string $pluralModelLabel = 'التصنيفات';
-
-    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'Category';
 
@@ -38,7 +41,6 @@ class CategoryResource extends Resource
     {
         return CategoryForm::configure($schema);
     }
-    
 
     public static function table(Table $table): Table
     {
@@ -51,7 +53,7 @@ class CategoryResource extends Resource
 
         $user = auth('web')->user();
 
-        if ($user instanceof \App\Models\User && filled($user->restaurant_id)) {
+        if ($user instanceof User && filled($user->restaurant_id)) {
             $query->where('restaurant_id', $user->restaurant_id);
         }
 

@@ -8,13 +8,14 @@ use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
+use App\Models\User;
 use App\Policies\OrderPolicy;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class OrderResource extends Resource
 {
@@ -25,6 +26,10 @@ class OrderResource extends Resource
     protected static ?string $modelPolicy = OrderPolicy::class;
 
     protected static ?string $navigationLabel = 'الطلبات';
+
+    protected static string|UnitEnum|null $navigationGroup = 'التشغيل';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'طلب';
 
@@ -37,7 +42,6 @@ class OrderResource extends Resource
         return OrderForm::configure($schema);
     }
 
-    
     public static function table(Table $table): Table
     {
         return OrdersTable::configure($table);
@@ -49,7 +53,7 @@ class OrderResource extends Resource
 
         $user = auth('web')->user();
 
-        if ($user instanceof \App\Models\User && filled($user->restaurant_id)) {
+        if ($user instanceof User && filled($user->restaurant_id)) {
             $query->where('restaurant_id', $user->restaurant_id);
         }
 

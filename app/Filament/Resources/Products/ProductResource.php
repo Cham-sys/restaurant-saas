@@ -8,13 +8,14 @@ use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Filament\Resources\Products\Tables\ProductsTable;
 use App\Models\Product;
+use App\Models\User;
 use App\Policies\ProductPolicy;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class ProductResource extends Resource
 {
@@ -25,6 +26,10 @@ class ProductResource extends Resource
     protected static ?string $modelPolicy = ProductPolicy::class;
 
     protected static ?string $navigationLabel = 'المنتجات';
+
+    protected static string|UnitEnum|null $navigationGroup = 'القائمة';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'منتج';
 
@@ -37,8 +42,6 @@ class ProductResource extends Resource
         return ProductForm::configure($schema);
     }
 
-    
-
     public static function table(Table $table): Table
     {
         return ProductsTable::configure($table);
@@ -50,7 +53,7 @@ class ProductResource extends Resource
 
         $user = auth('web')->user();
 
-        if ($user instanceof \App\Models\User && filled($user->restaurant_id)) {
+        if ($user instanceof User && filled($user->restaurant_id)) {
             $query->where('restaurant_id', $user->restaurant_id);
         }
 

@@ -11,9 +11,9 @@ use App\Models\Offer;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class OfferResource extends Resource
 {
@@ -24,12 +24,14 @@ class OfferResource extends Resource
     protected static ?string $recordTitleAttribute = 'Offer';
 
     protected static ?string $navigationLabel = 'العروض';
-    
+
+    protected static string|UnitEnum|null $navigationGroup = 'التسويق';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $modelLabel = 'عرض';
-    
+
     protected static ?string $pluralModelLabel = 'العروض';
-    
-    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {
@@ -47,14 +49,15 @@ class OfferResource extends Resource
             //
         ];
     }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
-        
+
         if (auth()->user()->restaurant_id) {
             $query->where('restaurant_id', auth()->user()->restaurant_id);
         }
-        
+
         return $query;
     }
 

@@ -21,8 +21,13 @@ Route::middleware('auth')->get('/restaurant/tables/{table}/qr', [RestaurantTable
 
 Route::middleware('auth')->prefix('driver')->group(function () {
     Route::get('/orders', [DriverController::class, 'index'])->name('driver.orders');
+    Route::get('/orders/{order}/tracking', [DriverController::class, 'tracking'])->name('driver.order.tracking');
+    Route::get('/orders/{order}', [DriverController::class, 'show'])->name('driver.order.show');
     Route::post('/orders/{order}/location', [DriverController::class, 'updateLocation'])->name('driver.location.update');
+    Route::post('/orders/{order}/status', [DriverController::class, 'updateStatus'])->name('driver.status.update');
 });
+
+Route::middleware(['auth', 'verified'])->get('/dashboard', [DriverController::class, 'dashboard'])->name('dashboard');
 
 Route::get('/{slug}', [RestaurantController::class, 'home'])->name('restaurant.home');
 Route::get('/{slug}/menu', [RestaurantController::class, 'menu'])->name('restaurant.menu');
@@ -71,6 +76,16 @@ Route::get('/{slug}/offers', [OfferController::class, 'index'])->name('offers.in
 // إرسال التقييم (AJAX)
 Route::post('/review/store-ajax', [ReviewController::class, 'storeAjax'])->name('review.store.ajax');
 
+
+Route::middleware(['auth'])->prefix('kitchen')->name('kitchen.')->group(function () {
+    
+    // عرض الشاشة
+    Route::get('/{slug}/display', [RestaurantController::class, 'kds'])->name('display');
+    
+    // تحديث الحالة (API داخلي)
+    Route::patch('/{slug}/orders/{order}/status', [RestaurantController::class, 'updateStatusKds'])->name('orders.update');
+});
+
 // مجموعة مسارات API الخاصة بلوحة تحكم المطعم
 Route::middleware(['auth'])->prefix('restaurant/api')->group(function () {
     Route::get('/theme/settings', [ThemeSettingsController::class, 'getSettings'])->name('restaurant.theme.settings.get');
@@ -82,8 +97,4 @@ Route::post('themes/{theme}/activate', [ThemeController::class, 'activate'])->na
 Route::post('themes/{theme}/clone', [ThemeController::class, 'clone'])->name('themes.clone');
 Route::post('themes/{theme}/reset-settings', [ThemeController::class, 'resetSettings'])->name('themes.reset-settings');
 Route::resource('themes', ThemeController::class);
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
-});
-
 require __DIR__.'/settings.php';
