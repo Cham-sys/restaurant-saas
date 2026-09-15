@@ -25,72 +25,7 @@ class RestaurantController extends Controller
         return view('restaurant.dashboard', compact('settings'));
     }
 
-    public function kds(string $slug)
-    {
-        $restaurant = Restaurant::with(['theme', 'categories', 'activeOffers'])
-            ->where('slug', $slug)
-            ->where('is_active', true)
-            ->firstOrFail();
-
-        $orders = Order::with('items')
-            ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready'])
-            ->where('restaurant_id', $restaurant->id)
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        $themePath = ThemeHelper::getThemePath($restaurant);
-        $initialOrders = $orders->map(function ($order) {
-
-            $jsStatus = 'new';
-            if ($order->status === 'preparing') {
-                $jsStatus = 'preparing';
-            } elseif ($order->status === 'ready') {
-                $jsStatus = 'ready';
-            }
-
-            return [
-                'id' => $order->tracking_code ?? $order->id,
-                'type' => $order->delivery_type, 
-                'table_number' => null, // يمكن إضافته لاحقاً إذا أضفت عمود table_id للجدول
-                'customer_name' => $order->customer_name,
-                'driver_name' => null, // يمكن ربطه لاحقاً إذا كان هناك علاقة مع driver
-                'status' => $jsStatus, // الحالة المحوّلة
-                'created_at' => $order->created_at->toIso8601String(), // تنسيق متوافق مع JS Date
-                'items' => $order->items->map(function ($item) {
-                    return [
-                        // غيّر 'name' و 'quantity' حسب أسماء الأعمدة الفعلية في جدول order_items
-                        'name' => $item->name ?? 'صنف غير معروف',
-                        'qty' => $item->quantity ?? $item->qty ?? 1,
-                        'notes' => $item->notes ?? ($order->notes ?? '') // ملاحظات الصنف أو ملاحظات الطلب العامة
-                    ];
-                })->toArray()
-            ];
-        });
-        return view("themes.{$themePath}.css.kds", compact('restaurant', 'initialOrders'));
-    }
-    public function updateStatusKds(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:new,preparing,ready,completed,pending'
-        ]);
-
-        $oldStatus = $order->status;
-        $order->update(['status' => $request->status]);
-
-        // إذا اكتمل الطلب، نحدث وقت الإنهاء
-        if ($request->status === 'completed') {
-            $order->update(['completed_at' => now()]);
-        }
-
-        // إرسال حدث Real-time لتحديث الشاشات الأخرى فوراً
-        broadcast(new OrderStatusChanged($order, $oldStatus))->toOthers();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تحديث الحالة بنجاح',
-            'order' => $order->load('items')
-        ]);
-    }
+    
     public function home(string $slug)
     {
         // تحميل المطعم مع الثيم

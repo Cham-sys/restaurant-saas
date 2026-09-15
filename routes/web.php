@@ -3,6 +3,7 @@
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\KdsController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PwaController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\RestaurantDashboardController;
 use App\Http\Controllers\RestaurantTableController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ThemeController;
+use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -78,12 +80,10 @@ Route::post('/review/store-ajax', [ReviewController::class, 'storeAjax'])->name(
 
 
 Route::middleware(['auth'])->prefix('kitchen')->name('kitchen.')->group(function () {
-    
-    // عرض الشاشة
-    Route::get('/{slug}/display', [RestaurantController::class, 'kds'])->name('display');
-    
-    // تحديث الحالة (API داخلي)
-    Route::patch('/{slug}/orders/{order}/status', [RestaurantController::class, 'updateStatusKds'])->name('orders.update');
+    // عرض شاشة Livewire
+    Route::get('/{slug}/display', [KdsController::class , 'index'])->name('display');
+    Route::post('/orders/{orderId}/status', [KdsController::class, 'updateStatus'])
+    ->name('orders.updateStatus');
 });
 
 // مجموعة مسارات API الخاصة بلوحة تحكم المطعم

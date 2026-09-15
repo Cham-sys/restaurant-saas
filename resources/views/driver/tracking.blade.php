@@ -1333,52 +1333,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        /**
-         * ============================================
-         * نظام تتبع الطلبات والتوصيل
-         * ============================================
-         * 
-         * ملاحظة للمطور:
-         * القيم المحاطة بـ {{--  --}} سيتم استبدالها من PHP
-         * مثال: {{-- order_id --}} → <?php echo $order_id; ?>
-         * 
-         * مثال على الاستيراد من PHP:
-         * ----------------------------------------
-         * <?php
-         * $config = [
-         *     'order_id' => $order['id'],
-         *     'view_mode' => $user_type === 'driver' ? 'driver' : 'customer',
-         *     'map_api_key' => getenv('MAP_API_KEY'),
-         *     'csrf_token' => $_SESSION['csrf_token'],
-         *     'restaurant' => [
-         *         'lat' => $order['restaurant_lat'],
-         *         'lng' => $order['restaurant_lng'],
-         *         'name' => $order['restaurant_name']
-         *     ],
-         *     'customer' => [
-         *         'lat' => $order['customer_lat'],
-         *         'lng' => $order['customer_lng'],
-         *         'address' => $order['delivery_address']
-         *     ],
-         *     'driver' => [
-         *         'lat' => $order['driver_lat'] ?? 0,
-         *         'lng' => $order['driver_lng'] ?? 0,
-         *         'name' => $order['driver_name'] ?? '',
-         *         'phone' => $order['driver_phone'] ?? '',
-         *         'vehicle' => $order['driver_vehicle'] ?? '',
-         *         'plate' => $order['driver_plate'] ?? '',
-         *         'rating' => $order['driver_rating'] ?? 0
-         *     ]
-         * ];
-         * ?>
-         * 
-         * ثم في JavaScript:
-         * const trackingConfig = <?php echo json_encode($config); ?>;
-         */
-
-        // ============================================
-        // كائن التكوين (يتم تعبئته من PHP)
-        // ============================================
+        
         const trackingConfig = {
             orderId: @json($order->id),
             viewMode: 'driver',

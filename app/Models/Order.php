@@ -47,6 +47,7 @@ class Order extends Model
         'review',
         'offer_id',
         'discount_amount',
+        
     ];
 
     protected function casts(): array
@@ -58,6 +59,12 @@ class Order extends Model
             'driver_longitude' => 'decimal:7',
             'driver_location_updated_at' => 'datetime',
         ];
+    }
+    protected $appends = ['type'];
+
+    public function getTypeAttribute()
+    {
+        return $this->attributes['delivery_type'] ?? 'delivery';
     }
 
     // العلاقة مع التقييم

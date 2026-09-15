@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderCreated;
 use App\Helpers\ThemeHelper;
 use App\Models\Coupon;
 use App\Models\Invoice;
@@ -253,7 +254,7 @@ class OrderController extends Controller
 
         session()->forget('cart');
         session()->forget(['restaurant_table_id', 'restaurant_table_restaurant_id']);
-
+        event(new OrderCreated($order));
         return redirect()->route('order.success', [$slug, $order->tracking_code]);
     }
 

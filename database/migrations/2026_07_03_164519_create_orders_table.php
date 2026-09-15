@@ -46,6 +46,8 @@ return new class extends Migration
             // التتبع والتقييم
             $table->string('tracking_code')->unique()->nullable();
             $table->tinyInteger('rating')->nullable()->unsigned(); // 1-5
+            $table->string('table_number')->nullable();
+            $table->string('driver_name')->nullable();
             $table->text('review')->nullable();
             $table->softDeletes();
             $table->timestamps();

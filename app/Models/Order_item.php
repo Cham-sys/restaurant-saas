@@ -27,4 +27,15 @@ class Order_item extends Model
     {
         return $this->belongsTo(Product::class)->withTrashed(); // جلب المنتج حتى لو كان محذوفاً
     }
+    protected $appends = ['name', 'qty'];
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['product_name'] ?? '';
+    }
+
+    public function getQtyAttribute()
+    {
+        return $this->attributes['quantity'] ?? 1;
+    }
 }
