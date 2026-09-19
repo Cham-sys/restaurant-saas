@@ -2,29 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ThemeHelper;
 use App\Models\Order;
+use App\Models\Restaurant;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DriverController extends Controller
 {
-    public function dashboard(Request $request): View
+    public function dashboard(string $slug): View
     {
-        $driver = $request->user();
+        $driver = auth()->user();
 
-        if ($driver?->role !== 'driver') {
-            return view('dashboard');
-        }
+        // 1. جلب المطعم المطلوب
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
 
+        // 2. التحقق من دور السائق وربطه بنفس المطعم
+        abort_unless(
+            $driver?->role === 'driver' && $driver->restaurant_id === $restaurant->id,
+            403,
+            'غير مصرح لك بالوصول للوحة تحكم هذا المطعم.'
+        );
+
+        // 3. جلب الطلبات النشطة للسائق داخل هذا المطعم فقط
         $activeOrders = Order::query()
+            ->where('restaurant_id', $restaurant->id)
             ->where('driver_id', $driver->id)
             ->whereIn('status', ['ready', 'on_way'])
             ->with('restaurant')
             ->latest()
             ->get();
 
+        // 4. إحصائيات اليوم الخاصة بهذا المطعم والسائق
         $todayOrders = Order::query()
+            ->where('restaurant_id', $restaurant->id)
             ->where('driver_id', $driver->id)
             ->whereDate('created_at', today());
 
@@ -34,7 +47,9 @@ class DriverController extends Controller
             'totalToday' => $todayOrders->count(),
         ];
 
+        // 5. الطلبات المكتملة حديثاً لنفس المطعم
         $recentOrders = Order::query()
+            ->where('restaurant_id', $restaurant->id)
             ->where('driver_id', $driver->id)
             ->where('status', 'delivered')
             ->with('restaurant')
@@ -42,42 +57,130 @@ class DriverController extends Controller
             ->limit(5)
             ->get();
 
-        return view('driver.dashboard', compact('driver', 'activeOrders', 'recentOrders', 'stats'));
+        // 6. تحديد مسار الثيم واستدعاء العرض
+        $themePath = ThemeHelper::getThemePath($restaurant);
+
+        return view("themes.{$themePath}.driver.dashboard", compact(
+            'driver',
+            'restaurant',
+            'activeOrders',
+            'recentOrders',
+            'stats',
+            'slug'
+        ));
     }
 
-    public function index(Request $request): View
+
+
+    public function index(Request $request, string $slug)
     {
         $driver = $request->user();
 
-        abort_unless($driver->role === 'driver', 403);
+        // 1. جلب المطعم
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
 
-        $orders = Order::query()
+        // 2. التحقق من صلاحيات المندوب
+        abort_unless(
+            $driver?->role === 'driver' && $driver->restaurant_id === $restaurant->id,
+            403,
+            'غير مصرح لك بالوصول لطلبات هذا المطعم.'
+        );
+
+        // 3. البحث عن الطلب الخاص بالمندوب إذا كان لديه طلب قيد التوصيل حالياً
+        $activeOrder = Order::query()
+            ->where('restaurant_id', $restaurant->id)
             ->where('driver_id', $driver->id)
             ->whereIn('status', ['ready', 'on_way'])
             ->with(['restaurant', 'items.product'])
             ->latest()
             ->get();
 
-        return view('driver.orders', compact('orders'));
+        // 4. الشرط: إذا كان يملك طلباً نشطاً يتم إرجاعه فقط، وإلا يتم جلب الطلبات الشاغرة
+        if ($activeOrder->isNotEmpty()) {
+            $order = $activeOrder->first();
+            return redirect()->route('driver.order.tracking', [$slug, $order->tracking_code]);
+        } else {
+            $orders = Order::query()
+                ->where('restaurant_id', $restaurant->id)
+                ->whereNull('driver_id')
+                ->where('status', 'ready')
+                ->with(['restaurant', 'items.product'])
+                ->latest()
+                ->get();
+        }
+
+        $themePath = ThemeHelper::getThemePath($restaurant);
+
+        return view("themes.{$themePath}.driver.orders", compact('orders', 'restaurant'));
     }
 
-    public function show(Request $request, Order $order): JsonResponse
+    public function acceptOrder(Request $request, string $slug, Order $order)
     {
-        $this->authorizeDriverOrder($request, $order);
+        $driver = $request->user();
+
+        // التأكد من أن المندوب لا يملك طلباً جارٍ توصيله حالياً
+        $hasActiveOrder = Order::where('driver_id', $driver->id)
+            ->whereIn('status', ['ready', 'on_way'])
+            ->exists();
+
+        if ($hasActiveOrder) {
+            // إضافة رمز 422 ليتعرف JavaScript على وجود خطأ
+            return response()->json([
+                'message' => 'لديك طلب نشط بالفعل، يجب إكماله وتسليمه أولاً.'
+            ], 422);
+        }
+
+        // ربط الطلب بالمندوب وتحويل حالته إلى on_way
+        $order->update([
+            'driver_id' => $driver->id,
+            'status'    => 'on_way',
+        ]);
+
+        return response()->json([
+            'message' => 'تم استلام الطلب بنجاح.'
+        ]);
+    }
+    public function show(Request $request, string $slug, Order $order): JsonResponse
+    {
+        if (!is_null($order->driver_id) && $order->driver_id !== auth()->id()) {
+            abort(403, 'لا تملك صلاحية الوصول لهذا الطلب.');
+        }
 
         return response()->json($this->orderPayload($order->loadMissing(['restaurant', 'items.product'])));
     }
 
-    public function tracking(Request $request, Order $order): View
+    public function tracking(Request $request, string $slug, Order $order): View|RedirectResponse
     {
-        $this->authorizeDriverOrder($request, $order);
+        // 1. التوجيه لصفحة الفاتورة فور اكتمال الطلب وتسليمه
+        if ($order->status === 'delivered') {
+            // يمكنك تغيير اسم الروت 'invoice.show' للروت الخاض بالفاتورة لديك لاحقاً
+            return redirect()->route('invoice.show', ['slug' => $slug, 'order' => $order->tracking_code]);
+        }
 
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $user = $request->user();
+        $isDriver = false;
+
+        // 2. فحص ما إذا كان الزائر هو السائق المسؤول عن الطلب
+        if ($user && $user->role === 'driver' && $user->restaurant_id === $restaurant->id && $order->driver_id === $user->id) {
+            $isDriver = true;
+        } else {
+            // 3. إذا لم يكن السائق، يتم التحقق من الكوكي للتأكد أنه المشتري ومن نفس الجهاز
+            $savedCookie = $request->cookie('order_device_token_' . $order->id);
+
+            if (!$savedCookie || $savedCookie !== $order->device_token) {
+                abort(403, 'غير مصرح لك بالوصول لصفحة التتبع إلا من الجهاز الذي تم إنشاء الطلب منه.');
+            }
+        }
+
+        $themePath = ThemeHelper::getThemePath($restaurant);
         $order->load(['restaurant', 'driver', 'items.product']);
 
-        return view('driver.tracking', compact('order'));
+        // إرسال المتغير isDriver لملف الـ Blade لتحديد هل تظهر لوحة التحكم أم العرض فقط
+        return view("themes.{$themePath}.driver.tracking", compact('order', 'restaurant', 'isDriver', 'slug'));
     }
 
-    public function updateLocation(Request $request, Order $order): JsonResponse
+    public function updateLocation(Request $request, string $slug, Order $order): JsonResponse
     {
         $this->authorizeDriverOrder($request, $order);
 
@@ -102,7 +205,7 @@ class DriverController extends Controller
         ]);
     }
 
-    public function updateStatus(Request $request, Order $order): JsonResponse
+    public function updateStatus(Request $request, string $slug, Order $order): JsonResponse
     {
         $this->authorizeDriverOrder($request, $order);
 
@@ -131,9 +234,10 @@ class DriverController extends Controller
 
         abort_unless(
             $driver?->role === 'driver'
-                && $order->driver_id === $driver->id
-                && $order->restaurant_id === $driver->restaurant_id,
-            403
+                && $driver->restaurant_id === $order->restaurant_id
+                && $order->driver_id === $driver->id,
+            403,
+            'غير مصرح لك بإجراء تغييرات على هذا الطلب.'
         );
     }
 
@@ -161,7 +265,7 @@ class DriverController extends Controller
             'restaurant' => [
                 'name' => $order->restaurant?->name,
             ],
-            'items' => $order->items->map(fn ($item): array => [
+            'items' => $order->items->map(fn($item): array => [
                 'name' => $item->product?->name ?? 'منتج محذوف',
                 'quantity' => $item->quantity,
             ])->values()->all(),

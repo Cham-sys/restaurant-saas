@@ -69,44 +69,62 @@ class ThemeDiscoveryService
      * مزامنة الثيمات المكتشفة مع قاعدة البيانات
      */
     public function sync(): array
-    {
-        $discovered = $this->discover();
-        $synced = [];
-        $created = 0;
-        $updated = 0;
+{
+    $discovered = $this->discover();
+    $synced = [];
+    $created = 0;
+    $updated = 0;
+    $discoveredFolders = [];
 
-        foreach ($discovered as $themeData) {
-            $theme = Theme::updateOrCreate(
-                ['folder_name' => $themeData['folder_name']],
-                [
-                    'name' => $themeData['name'],
-                    'slug' => $themeData['slug'],
-                    'author' => $themeData['author'],
-                    'version' => $themeData['version'],
-                    'description' => $themeData['description'],
-                    'preview_image' => $themeData['preview_image'],
-                    'default_settings' => $themeData['default_settings'],
-                    'allowed_variables' => $themeData['allowed_variables'],
-                    'is_active' => true,
-                ]
-            );
+    foreach ($discovered as $themeData) {
+        $discoveredFolders[] = $themeData['folder_name'];
 
-            $synced[] = $theme;
+        $theme = Theme::where('folder_name', $themeData['folder_name'])->first();
 
-            if ($theme->wasRecentlyCreated) {
-                $created++;
-            } else {
-                $updated++;
-            }
+        if ($theme) {
+            $theme->update([
+                'name' => $themeData['name'],
+                'slug' => $themeData['slug'],
+                'author' => $themeData['author'],
+                'version' => $themeData['version'],
+                'description' => $themeData['description'],
+                'preview_image' => $themeData['preview_image'],
+                'default_settings' => $themeData['default_settings'],
+                'allowed_variables' => $themeData['allowed_variables'],
+            ]);
+            $updated++;
+        } else {
+            $theme = Theme::create([
+                'folder_name' => $themeData['folder_name'],
+                'name' => $themeData['name'],
+                'slug' => $themeData['slug'],
+                'author' => $themeData['author'],
+                'version' => $themeData['version'],
+                'description' => $themeData['description'],
+                'preview_image' => $themeData['preview_image'],
+                'default_settings' => $themeData['default_settings'],
+                'allowed_variables' => $themeData['allowed_variables'],
+                'is_active' => false, // 👈 جعل الحالة الافتراضية غير مفعلة
+            ]);
+            $created++;
         }
 
-        return [
-            'total_discovered' => count($discovered),
-            'created' => $created,
-            'updated' => $updated,
-            'themes' => $synced,
-        ];
+        $synced[] = $theme;
     }
+
+    // 👈 حذف الثيمات من قاعدة البيانات إذا تم حذف مجلداتها من القرص (بشرط عدم ارتباطها بمطاعم)
+    Theme::query()
+        ->whereNotIn('folder_name', $discoveredFolders)
+        ->doesntHave('restaurants')
+        ->delete();
+
+    return [
+        'total_discovered' => count($discovered),
+        'created' => $created,
+        'updated' => $updated,
+        'themes' => $synced,
+    ];
+}
 
     /**
      * التحقق من وجود ثيم معين

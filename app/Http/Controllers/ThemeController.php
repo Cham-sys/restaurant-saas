@@ -95,10 +95,10 @@ class ThemeController extends Controller
         return redirect()->back()->with('success', 'تم تفعيل الثيم بنجاح.');
     }
 
-    public function clone(Request $request, Theme $theme): \Illuminate\Http\RedirectResponse
+    public function clone(Request $request, Theme $theme, ThemeUploadService $uploadService): \Illuminate\Http\RedirectResponse
     {
         $name = trim((string) $request->input('name', $theme->name.' نسخة'));
-        $result = app(ThemeUploadService::class)->cloneTheme($theme, $name);
+        $result = $uploadService->cloneTheme($theme, $name);
 
         if (! $result['success']) {
             return redirect()->back()->with('error', $result['message']);
@@ -124,14 +124,20 @@ class ThemeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Theme $theme)
+    public function destroy(Theme $theme, ThemeUploadService $uploadService)
     {
+        // التحقق من وجود مطاعم تستخدم الثيم
         if ($theme->restaurants()->count() > 0) {
-            return redirect()->route('themes.index')->with('error', 'Cannot delete theme that is in use by restaurants!');
+            return redirect()->route('themes.index')->with('error', 'لا يمكن حذف ثيم مستخدم حالياً من قبل مطاعم!');
         }
 
-        $theme->delete();
+        // استدعاء دالة الحذف من الخدمة المجهزة وحذف المجلد والسجل معاً
+        $result = $uploadService->delete($theme);
 
-        return redirect()->route('themes.index')->with('success', 'Theme deleted successfully!');
+        if (! $result['success']) {
+            return redirect()->route('themes.index')->with('error', $result['message']);
+        }
+
+        return redirect()->route('themes.index')->with('success', 'تم حذف الثيم ومجلد الملفات الخاص به بنجاح!');
     }
 }

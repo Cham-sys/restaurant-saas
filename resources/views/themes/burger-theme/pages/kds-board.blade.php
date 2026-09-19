@@ -1181,138 +1181,16 @@
     </div>
 
     <script>
-        // ============================================
-        // التكوين - يتم حقنه من Laravel
-        // ============================================
         const KDS_CONFIG = {
             apiEndpoint: "{{ route('kitchen.display', $restaurant->id) }}",
-            websocketUrl: true, // سيتم الاعتماد على Laravel Echo المدمج
+            websocketUrl: true,
             updateInterval: 10000,
             urgentThreshold: 15,
             restaurantId: {{ $orderCollection->first()->restaurant_id ?? $restaurant->id }},
             csrfToken: "{{ csrf_token() }}",
-            demoMode: false // إيقاف البيانات التجريبية
+            demoMode: false
         };
 
-        // ============================================
-        // بيانات تجريبية (Mock Orders)
-        // Laravel: ستأتي من Order::with('items')->where('status', '!=', 'completed')
-        // ============================================
-        const mockOrders = [{
-                id: 'ORD-9921',
-                type: 'delivery',
-                table_number: null,
-                customer_name: 'محمد علي',
-                driver_name: 'أحمد',
-                items: [{
-                        name: 'برجر دبل',
-                        qty: 2,
-                        notes: 'بدون بصل'
-                    },
-                    {
-                        name: 'بطاطس مقلية',
-                        qty: 1,
-                        notes: ''
-                    }
-                ],
-                status: 'new',
-                created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString()
-            },
-            {
-                id: 'ORD-9922',
-                type: 'dine-in',
-                table_number: 7,
-                customer_name: 'عائلة الأحمد',
-                driver_name: null,
-                items: [{
-                        name: 'مشاوي مشكلة',
-                        qty: 1,
-                        notes: 'حار'
-                    },
-                    {
-                        name: 'فتوش',
-                        qty: 2,
-                        notes: ''
-                    },
-                    {
-                        name: 'لبنة',
-                        qty: 1,
-                        notes: ''
-                    },
-                    {
-                        name: 'عصير ليمون بالنعناع',
-                        qty: 3,
-                        notes: 'قليل السكر'
-                    }
-                ],
-                status: 'new',
-                created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-            },
-            {
-                id: 'ORD-9923',
-                type: 'takeaway',
-                table_number: null,
-                customer_name: 'فاطمة الخالد',
-                driver_name: null,
-                items: [{
-                        name: 'شاورما عربية دجاج',
-                        qty: 3,
-                        notes: ''
-                    },
-                    {
-                        name: 'كولا 330مل',
-                        qty: 3,
-                        notes: ''
-                    }
-                ],
-                status: 'preparing',
-                created_at: new Date(Date.now() - 8 * 60 * 1000).toISOString()
-            },
-            {
-                id: 'ORD-9924',
-                type: 'delivery',
-                table_number: null,
-                customer_name: 'خالد المصري',
-                driver_name: 'يوسف',
-                items: [{
-                        name: 'كبسة لحم',
-                        qty: 2,
-                        notes: ''
-                    },
-                    {
-                        name: 'سلطة خضار',
-                        qty: 1,
-                        notes: 'بدون بصل'
-                    }
-                ],
-                status: 'preparing',
-                created_at: new Date(Date.now() - 18 * 60 * 1000).toISOString() // متأخر!
-            },
-            {
-                id: 'ORD-9925',
-                type: 'dine-in',
-                table_number: 3,
-                customer_name: 'أبو يوسف',
-                driver_name: null,
-                items: [{
-                        name: 'كبة مشوية',
-                        qty: 6,
-                        notes: ''
-                    },
-                    {
-                        name: 'متبل',
-                        qty: 1,
-                        notes: ''
-                    }
-                ],
-                status: 'ready',
-                created_at: new Date(Date.now() - 22 * 60 * 1000).toISOString()
-            }
-        ];
-
-        // ============================================
-        // Class: KitchenDisplaySystem
-        // ============================================
         class KitchenDisplaySystem {
             constructor(config) {
                 this.config = config;
@@ -1324,7 +1202,6 @@
                 this.websocket = null;
                 this.seenOrderIds = new Set();
 
-                // عناصر DOM
                 this.columns = {
                     new: document.getElementById('columnNew'),
                     preparing: document.getElementById('columnPreparing'),
@@ -1338,7 +1215,6 @@
                 };
             }
 
-            // ========== التهيئة ==========
             async init() {
                 this.initAudio();
                 this.setupEventListeners();
@@ -1354,52 +1230,69 @@
                 }
             }
 
-            // ========== تهيئة الصوت ==========
             initAudio() {
                 try {
-                    this.audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.audioContext = new AudioContext();
+                    }
                 } catch (e) {
-                    console.warn('Web Audio API غير مدعوم');
+                    // AudioContext غير مدعوم في المتصفح
                 }
             }
 
-            // ========== تنبيه صوتي (Ding) ==========
             playDing() {
-                if (!this.soundEnabled || !this.audioContext) return;
+                if (!this.soundEnabled) return;
 
                 try {
-                    if (this.audioContext.state === 'suspended') {
+                    if (!this.audioContext) {
+                        this.initAudio();
+                    }
+
+                    if (this.audioContext && this.audioContext.state === 'suspended') {
                         this.audioContext.resume();
                     }
 
-                    // نغمة Ding قصيرة
-                    const oscillator = this.audioContext.createOscillator();
-                    const gainNode = this.audioContext.createGain();
+                    if (this.audioContext) {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
 
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime);
-                    oscillator.frequency.exponentialRampToValueAtTime(
-                        1320, this.audioContext.currentTime + 0.1
-                    );
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(
+                            1320, this.audioContext.currentTime + 0.1
+                        );
 
-                    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(
-                        0.01, this.audioContext.currentTime + 0.3
-                    );
+                        gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(
+                            0.01, this.audioContext.currentTime + 0.35
+                        );
 
-                    oscillator.connect(gainNode);
-                    gainNode.connect(this.audioContext.destination);
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
 
-                    oscillator.start();
-                    oscillator.stop(this.audioContext.currentTime + 0.3);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.35);
+                    }
                 } catch (e) {
-                    console.warn('فشل تشغيل الصوت:', e);
+                    // تجميع الأخطاء في حال منع المتصفح التشغيل التلقائي
                 }
             }
 
-            // ========== مستمعات الأحداث ==========
             setupEventListeners() {
-                // زر الصوت
+                // تفعيل وتفعيل الصوت عند أي تفاعل للمستخدم لفك حظر المتصفح
+                const unlockAudio = () => {
+                    if (this.audioContext && this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                };
+                document.addEventListener('click', unlockAudio, {
+                    once: true
+                });
+                document.addEventListener('keydown', unlockAudio, {
+                    once: true
+                });
+
                 document.getElementById('btnSound').addEventListener('click', () => {
                     this.soundEnabled = !this.soundEnabled;
                     const btn = document.getElementById('btnSound');
@@ -1408,10 +1301,11 @@
                     if (this.soundEnabled) {
                         btn.classList.add('active');
                         icon.className = 'fa-solid fa-volume-high';
-                        this.showToast('success', 'تم تشغيل الصوت', 'سيتم تنبيهك عند وصول طلبات جديدة');
-                        if (this.audioContext?.state === 'suspended') {
+                        if (this.audioContext && this.audioContext.state === 'suspended') {
                             this.audioContext.resume();
                         }
+                        this.playDing();
+                        this.showToast('success', 'تم تشغيل الصوت', 'سيتم تنبيهك عند وصول طلبات جديدة');
                     } else {
                         btn.classList.remove('active');
                         icon.className = 'fa-solid fa-volume-xmark';
@@ -1419,17 +1313,14 @@
                     }
                 });
 
-                // زر ملء الشاشة
                 document.getElementById('btnFullscreen').addEventListener('click', () => {
                     this.toggleFullscreen();
                 });
 
-                // زر إضافة طلب تجريبي
                 document.getElementById('btnAddDemo').addEventListener('click', () => {
                     this.addDemoOrder();
                 });
 
-                // اختصارات لوحة المفاتيح
                 document.addEventListener('keydown', (e) => {
                     if (e.target.matches('input, textarea')) return;
 
@@ -1442,7 +1333,6 @@
                 });
             }
 
-            // ========== ملء الشاشة ==========
             toggleFullscreen() {
                 const btn = document.getElementById('btnFullscreen');
                 const icon = btn.querySelector('i');
@@ -1460,7 +1350,6 @@
                 }
             }
 
-            // ========== الساعة ==========
             startClock() {
                 const updateClock = () => {
                     const now = new Date();
@@ -1484,18 +1373,7 @@
                 setInterval(updateClock, 1000);
             }
 
-            // ========== تحميل البيانات الأولية ==========
             loadInitialData() {
-                if (this.config.demoMode) {
-                    mockOrders.forEach(order => {
-                        this.orders.set(order.id, order);
-                        this.seenOrderIds.add(order.id);
-                    });
-                    this.renderAllOrders();
-                    return;
-                }
-
-                // حقن البيانات القادمة من View لارافيل فوراً
                 const initialOrders = @json(\App\Http\Resources\KdsOrderResource::collection($orderCollection));
 
                 initialOrders.forEach(order => {
@@ -1504,92 +1382,39 @@
                 });
 
                 this.renderAllOrders();
-
-
-                /**
-                 * ============================================
-                 * Laravel Integration - Fetch API
-                 * ============================================
-                 * 
-                 * fetch(`${this.config.apiEndpoint}?restaurant_id=${this.config.restaurantId}`, {
-                 *     method: 'GET',
-                 *     headers: {
-                 *         'Accept': 'application/json',
-                 *         'X-Requested-With': 'XMLHttpRequest',
-                 *         'X-CSRF-Token': this.config.csrfToken
-                 *     }
-                 * })
-                 * .then(response => response.json())
-                 * .then(data => {
-                 *     data.orders.forEach(order => {
-                 *         this.orders.set(order.id, order);
-                 *         this.seenOrderIds.add(order.id);
-                 *     });
-                 *     this.renderAllOrders();
-                 * })
-                 * .catch(error => {
-                 *     console.error('فشل جلب الطلبات:', error);
-                 *     this.handleConnectionError();
-                 * });
-                 */
             }
 
-            // ========== بدء التحديث التلقائي ==========
             startAutoFetch() {
                 this.updateTimer = setInterval(() => {
                     this.fetchOrders();
                 }, this.config.updateInterval);
             }
 
-            // ========== جلب الطلبات ==========
             async fetchOrders() {
-                /**
-                 * Laravel Integration:
-                 * 
-                 * try {
-                 *     const response = await fetch(
-                 *         `${this.config.apiEndpoint}?restaurant_id=${this.config.restaurantId}&t=${Date.now()}`,
-                 *         {
-                 *             headers: {
-                 *                 'Accept': 'application/json',
-                 *                 'X-CSRF-Token': this.config.csrfToken
-                 *             }
-                 *         }
-                 *     );
-                 *     const data = await response.json();
-                 *     this.syncOrders(data.orders);
-                 * } catch (error) {
-                 *     this.handleConnectionError();
-                 * }
-                 */
+                // إمكانية إضافة Re-sync مستقبلاً إن دعت الحاجة
             }
 
-            // ========== WebSocket (Laravel Reverb) ==========
             connectWebSocket() {
-                // إذا لم تجهز مكتبة Echo بعد، انتظر 200 ملي ثانية وأعد المحاولة تلقائياً
                 if (typeof window.Echo === 'undefined') {
                     setTimeout(() => this.connectWebSocket(), 200);
-                    console.error("خطأ في اتصال ريفيرب");
                     return;
                 }
 
-                // بمجرد توفر Echo يتم الاتصال بالقناة
                 window.Echo.private(`restaurant.${this.config.restaurantId}.kds`)
                     .listen('.order.created', (event) => {
-                        this.handleNewOrder(event.order);
+                        if (event && event.order) {
+                            this.handleNewOrder(event.order);
+                        }
                     });
             }
 
-            // ========== بدء المؤقتات ==========
             startTimers() {
-                // تحديث المؤقتات كل 30 ثانية
                 this.tickTimer = setInterval(() => {
                     this.updateAllTimers();
                     this.updateStats();
                 }, 30000);
             }
 
-            // ========== تحديث جميع المؤقتات ==========
             updateAllTimers() {
                 this.orders.forEach((order, id) => {
                     const timerEl = document.querySelector(`[data-order-id="${id}"] .order-timer`);
@@ -1598,10 +1423,8 @@
                     const elapsed = this.getElapsedMinutes(order.created_at);
                     const card = document.querySelector(`[data-order-id="${id}"]`);
 
-                    // تحديث النص
                     timerEl.innerHTML = `<i class="fa-regular fa-clock"></i> منذ ${elapsed} د`;
 
-                    // تحديث حالة الطوارئ
                     timerEl.classList.remove('warning', 'urgent');
                     if (card) card.classList.remove('urgent');
 
@@ -1616,57 +1439,50 @@
                 });
             }
 
-            // ========== حساب الوقت المنقضي (بالدقائق) ==========
             getElapsedMinutes(isoDate) {
                 const created = new Date(isoDate).getTime();
                 const now = Date.now();
                 return Math.floor((now - created) / 60000);
             }
 
-            // ========== عرض جميع الطلبات ==========
             renderAllOrders() {
-                // مسح الأعمدة
                 Object.values(this.columns).forEach(col => col.innerHTML = '');
 
-                // تجميع الطلبات حسب الحالة
                 const grouped = {
                     new: [],
                     preparing: [],
                     ready: []
                 };
+
                 this.orders.forEach(order => {
                     if (grouped[order.status]) {
                         grouped[order.status].push(order);
                     }
                 });
 
-                // ترتيب حسب الوقت (الأقدم أولاً)
                 Object.keys(grouped).forEach(status => {
                     grouped[status].sort((a, b) =>
                         new Date(a.created_at) - new Date(b.created_at)
                     );
                 });
 
-                // عرض الطلبات
                 grouped.new.forEach(order => this.columns.new.appendChild(this.createOrderCard(order)));
                 grouped.preparing.forEach(order => this.columns.preparing.appendChild(this.createOrderCard(order)));
                 grouped.ready.forEach(order => this.columns.ready.appendChild(this.createOrderCard(order)));
 
-                // حالات فارغة
                 Object.keys(this.columns).forEach(status => {
                     if (grouped[status].length === 0) {
                         this.columns[status].innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-state-icon">📭</div>
-                                <div class="empty-state-text">لا توجد طلبات</div>
-                            </div>
-                        `;
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">لا توجد طلبات</div>
+                        </div>
+                    `;
                     }
                 });
 
                 this.updateStats();
             }
-
             // ========== إنشاء بطاقة طلب ==========
             createOrderCard(order) {
                 const card = document.createElement('article');
@@ -1677,7 +1493,6 @@
 
                 const elapsed = this.getElapsedMinutes(order.created_at);
 
-                // تحديد فئة المؤقت
                 let timerClass = 'order-timer';
                 if (order.status !== 'ready') {
                     if (elapsed >= this.config.urgentThreshold) {
@@ -1688,39 +1503,36 @@
                     }
                 }
 
-                // شارة "جديد" للطلبات الحديثة
                 const newBadge = order.status === 'new' && elapsed < 1 ?
                     `<div class="new-badge"><i class="fa-solid fa-circle"></i> جديد</div>` :
                     '';
 
-                // معلومات إضافية حسب النوع
                 let extraInfo = '';
                 if (order.type === 'dine-in' && order.table_number) {
                     extraInfo = `
-                        <div class="table-badge">
-                            <i class="fa-solid fa-utensils"></i>
-                            <span>طاولة ${order.table_number}</span>
-                        </div>
-                    `;
+                    <div class="table-badge">
+                        <i class="fa-solid fa-utensils"></i>
+                        <span>طاولة ${order.table_number}</span>
+                    </div>
+                `;
                 } else if (order.type === 'delivery') {
                     if (order.driver_name) {
                         extraInfo = `
-                            <div class="driver-info">
-                                <i class="fa-solid fa-motorcycle"></i>
-                                <span>المندوب: ${this.escapeHtml(order.driver_name)}</span>
-                            </div>
-                        `;
+                        <div class="driver-info">
+                            <i class="fa-solid fa-motorcycle"></i>
+                            <span>المندوب: ${this.escapeHtml(order.driver_name)}</span>
+                        </div>
+                    `;
                     } else {
                         extraInfo = `
-                            <div class="driver-info" style="background: rgba(239, 68, 68, 0.08); color: var(--danger-color); border-color: rgba(239, 68, 68, 0.2);">
-                                <i class="fa-solid fa-clock"></i>
-                                <span>بانتظار المندوب</span>
-                            </div>
-                        `;
+                        <div class="driver-info" style="background: rgba(239, 68, 68, 0.08); color: var(--danger-color); border-color: rgba(239, 68, 68, 0.2);">
+                            <i class="fa-solid fa-clock"></i>
+                            <span>بانتظار المندوب</span>
+                        </div>
+                    `;
                     }
                 }
 
-                // أيقونة النوع
                 const typeIcons = {
                     'dine-in': {
                         icon: '🪑',
@@ -1735,97 +1547,108 @@
                         label: 'توصيل'
                     }
                 };
-                const typeInfo = typeIcons[order.type];
+                const typeInfo = typeIcons[order.type] || {
+                    icon: '📦',
+                    label: 'طلب'
+                };
 
-                // الأصناف
-                const itemsHtml = order.items.map(item => {
+                const itemsHtml = (order.items || []).map(item => {
                     const itemName = item.name || item.product_name || 'منتج';
                     const itemQty = item.qty || item.quantity || 1;
 
                     return `
-                        <li class="item-row">
-                            <span class="item-qty">${itemQty}×</span>
-                            <div class="item-details">
-                                <div class="item-name">${this.escapeHtml(itemName)}</div>
-                                ${item.notes ? `
-                                        <div class="item-note">
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-                                            <span>${this.escapeHtml(item.notes)}</span>
-                                        </div>
-                                    ` : ''}
-                            </div>
-                        </li>
-                    `;
+                    <li class="item-row">
+                        <span class="item-qty">${itemQty}×</span>
+                        <div class="item-details">
+                            <div class="item-name">${this.escapeHtml(itemName)}</div>
+                            ${item.notes ? `
+                                    <div class="item-note">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span>${this.escapeHtml(item.notes)}</span>
+                                    </div>
+                                ` : ''}
+                        </div>
+                    </li>
+                `;
                 }).join('');
 
-                // أزرار حسب الحالة
+                // إضافة ملاحظة الطلب العامة فوق أزرار الإجراءات مباشرة
+                const orderNote = order.notes || order.order_note || order.note;
+                const orderNoteHtml = orderNote ? `
+                <div class="order-general-note" style="margin: 8px 0; padding: 6px 10px; background: rgba(245, 158, 11, 0.1); border-right: 3px solid #f59e0b; border-radius: 4px; color: #b45309; font-size: 0.85rem; font-weight: 600;">
+                    <i class="fa-solid fa-note-sticky"></i>
+                    <span>ملاحظة الطلب: ${this.escapeHtml(orderNote)}</span>
+                </div>
+            ` : '';
+
                 let actionsHtml = '';
                 if (order.status === 'new') {
                     actionsHtml = `
-                        <button class="action-btn primary" data-action="start" data-order-id="${order.id}">
-                            <i class="fa-solid fa-play"></i>
-                            <span>ابدأ التحضير</span>
-                        </button>
-                    `;
+                    <button class="action-btn primary" data-action="start" data-order-id="${order.id}">
+                        <i class="fa-solid fa-play"></i>
+                        <span>ابدأ التحضير</span>
+                    </button>
+                `;
                 } else if (order.status === 'preparing') {
                     actionsHtml = `
-                        <button class="action-btn ghost" data-action="back" data-order-id="${order.id}">
-                            <i class="fa-solid fa-rotate-left"></i>
-                        </button>
-                        <button class="action-btn success" data-action="ready" data-order-id="${order.id}">
-                            <i class="fa-solid fa-check"></i>
-                            <span>تم التحضير / جاهز</span>
-                        </button>
-                    `;
+                    <button class="action-btn ghost" data-action="back" data-order-id="${order.id}">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <button class="action-btn success" data-action="ready" data-order-id="${order.id}">
+                        <i class="fa-solid fa-check"></i>
+                        <span>تم التحضير / جاهز</span>
+                    </button>
+                `;
                 } else if (order.status === 'ready') {
                     actionsHtml = `
-                        <button class="action-btn ghost" data-action="back" data-order-id="${order.id}">
-                            <i class="fa-solid fa-rotate-left"></i>
-                            <span>إرجاع</span>
-                        </button>
-                        <button class="action-btn warning" data-action="complete" data-order-id="${order.id}">
-                            <i class="fa-solid fa-box-archive"></i>
-                            <span>أرشفة / تم التسليم</span>
-                        </button>
-                    `;
+                    <button class="action-btn ghost" data-action="back" data-order-id="${order.id}">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>إرجاع</span>
+                    </button>
+                    <button class="action-btn warning" data-action="complete" data-order-id="${order.id}">
+                        <i class="fa-solid fa-box-archive"></i>
+                        <span>أرشفة / تم التسليم</span>
+                    </button>
+                `;
                 }
 
                 card.innerHTML = `
-                    ${newBadge}
-                    <header class="card-header">
-                        <div class="order-type-badge ${order.type}">
-                            <span class="type-icon">${typeInfo.icon}</span>
-                            <span>${typeInfo.label}</span>
-                        </div>
-                        <div class="${timerClass}">
-                            <i class="fa-regular fa-clock"></i>
-                            <span>منذ ${elapsed} د</span>
-                        </div>
-                    </header>
-
-                    <div class="order-info">
-                        <div class="order-id-row">
-                            <h3 class="order-id">#${order.id}</h3>
-                            ${extraInfo}
-                        </div>
-                        ${order.customer_name ? `
-                                            <div class="customer-name">
-                                                <i class="fa-regular fa-user"></i>
-                                                <span>${this.escapeHtml(order.customer_name)}</span>
-                                            </div>
-                                        ` : ''}
+                ${newBadge}
+                <header class="card-header">
+                    <div class="order-type-badge ${order.type}">
+                        <span class="type-icon">${typeInfo.icon}</span>
+                        <span>${typeInfo.label}</span>
                     </div>
-
-                    <ul class="items-list">
-                        ${itemsHtml}
-                    </ul>
-
-                    <div class="card-actions">
-                        ${actionsHtml}
+                    <div class="${timerClass}">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>منذ ${elapsed} د</span>
                     </div>
-                `;
+                </header>
 
-                // ربط أزرار الإجراءات
+                <div class="order-info">
+                    <div class="order-id-row">
+                        <h3 class="order-id">#${order.id}</h3>
+                        ${extraInfo}
+                    </div>
+                    ${order.customer_name ? `
+                            <div class="customer-name">
+                                <i class="fa-regular fa-user"></i>
+                                <span>${this.escapeHtml(order.customer_name)}</span>
+                            </div>
+                        ` : ''}
+                </div>
+
+                <ul class="items-list">
+                    ${itemsHtml}
+                </ul>
+
+                ${orderNoteHtml}
+
+                <div class="card-actions">
+                    ${actionsHtml}
+                </div>
+            `;
+
                 card.querySelectorAll('[data-action]').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -1839,7 +1662,6 @@
             }
 
             // ========== معالجة الإجراءات ==========
-
             async handleAction(action, orderId) {
                 const order = this.orders.get(orderId);
                 if (!order) return;
@@ -1854,8 +1676,7 @@
                 const newStatus = statusMap[action];
                 if (!newStatus) return;
 
-                // استخدام المعرف العددي الخاص بالـ DB إذا كان متوفراً
-                const targetId = order.db_id || orderId;
+                const targetId = String(orderId).replace('#', '').trim();
 
                 try {
                     const response = await fetch(`/kitchen/orders/${targetId}/status`, {
@@ -1889,12 +1710,10 @@
                     this.renderAllOrders();
 
                 } catch (error) {
-                    console.error('Error updating status:', error);
                     this.showToast('error', 'خطأ', 'تعذر تحديث حالة الطلب في السيرفر');
                 }
             }
 
-            // ========== الحصول على الحالة السابقة ==========
             getPreviousStatus(currentStatus) {
                 const flow = {
                     'preparing': 'new',
@@ -1905,10 +1724,8 @@
 
             // ========== معالجة طلب جديد ==========
             handleNewOrder(order) {
-                if (this.seenOrderIds.has(order.id)) {
-                    this.orders.set(order.id, order);
-                } else {
-                    this.orders.set(order.id, order);
+                this.orders.set(order.id, order);
+                if (!this.seenOrderIds.has(order.id)) {
                     this.seenOrderIds.add(order.id);
                     this.playDing();
                     this.showToast('info', 'طلب جديد!', `وصل طلب جديد #${order.id}`);
@@ -1942,7 +1759,6 @@
                 document.getElementById('statAvgTime').textContent = `${avgTime} د`;
                 document.getElementById('statUrgent').textContent = urgent;
 
-                // تحديث العدادات
                 const counts = {
                     new: 0,
                     preparing: 0,
@@ -1955,7 +1771,9 @@
                 });
 
                 Object.keys(counts).forEach(status => {
-                    this.counts[status].textContent = counts[status];
+                    if (this.counts[status]) {
+                        this.counts[status].textContent = counts[status];
+                    }
                 });
             }
 
@@ -2008,10 +1826,10 @@
                     driver_name: type === 'delivery' ? drivers[Math.floor(Math.random() * drivers.length)] : null,
                     items: [],
                     status: 'new',
+                    notes: Math.random() > 0.5 ? 'يرجى الإسراع في التحضير' : '',
                     created_at: new Date().toISOString()
                 };
 
-                // إضافة 1-4 أصناف عشوائية
                 const itemCount = 1 + Math.floor(Math.random() * 4);
                 const usedItems = new Set();
                 for (let i = 0; i < itemCount; i++) {
@@ -2033,6 +1851,8 @@
             // ========== Toast Notifications ==========
             showToast(type, title, message, duration = 4000) {
                 const container = document.getElementById('toastContainer');
+                if (!container) return;
+
                 const icons = {
                     success: 'fa-solid fa-circle-check',
                     warning: 'fa-solid fa-triangle-exclamation',
@@ -2044,14 +1864,14 @@
                 toast.className = `toast ${type}`;
                 toast.setAttribute('role', 'alert');
                 toast.innerHTML = `
-                    <div class="toast-icon">
-                        <i class="${icons[type] || icons.info}"></i>
-                    </div>
-                    <div class="toast-content">
-                        <div class="toast-title">${this.escapeHtml(title)}</div>
-                        <div class="toast-message">${this.escapeHtml(message)}</div>
-                    </div>
-                `;
+                <div class="toast-icon">
+                    <i class="${icons[type] || icons.info}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${this.escapeHtml(title)}</div>
+                    <div class="toast-message">${this.escapeHtml(message)}</div>
+                </div>
+            `;
 
                 container.appendChild(toast);
 
@@ -2061,7 +1881,6 @@
                 }, duration);
             }
 
-            // ========== أدوات مساعدة ==========
             escapeHtml(text) {
                 if (!text) return '';
                 const div = document.createElement('div');
@@ -2069,7 +1888,6 @@
                 return div.innerHTML;
             }
 
-            // ========== التنظيف ==========
             destroy() {
                 if (this.updateTimer) clearInterval(this.updateTimer);
                 if (this.tickTimer) clearInterval(this.tickTimer);
@@ -2090,17 +1908,6 @@
             window.addEventListener('beforeunload', () => {
                 kds.destroy();
             });
-
-            // إعادة تشغيل الصوت عند أول تفاعل
-            const resumeAudio = () => {
-                if (kds.audioContext?.state === 'suspended') {
-                    kds.audioContext.resume();
-                }
-                document.removeEventListener('click', resumeAudio);
-                document.removeEventListener('keydown', resumeAudio);
-            };
-            document.addEventListener('click', resumeAudio);
-            document.addEventListener('keydown', resumeAudio);
         });
     </script>
 </body>

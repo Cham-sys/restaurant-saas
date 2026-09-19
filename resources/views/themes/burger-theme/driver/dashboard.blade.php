@@ -44,7 +44,7 @@
                 <h2 class="mt-2 text-3xl font-black tracking-tight">جاهز لرحلتك القادمة؟</h2>
                 <p class="mt-2 max-w-xl text-sm leading-6 text-slate-400">تابع طلباتك، شارك موقعك، وسجّل التسليم من مكان واحد.</p>
             </div>
-            <a href="{{ route('driver.orders') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-600">عرض كل الطلبات <span>←</span></a>
+            <a href="{{ route('driver.orders', ['slug']) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-600">عرض كل الطلبات <span>←</span></a>
         </section>
 
         <section class="grid gap-4 sm:grid-cols-3">

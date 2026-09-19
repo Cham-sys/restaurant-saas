@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://router.project-osrm.org;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://router.project-osrm.org;">
     <title>نظام تتبع الطلبات والتوصيل</title>
-    
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+
     <!-- Fontsource Inter -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/css/inter@latest/arabic.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/css/inter@latest/latin.css" />
@@ -108,7 +110,9 @@
         /* ============================================
            إعادة التعيين والأساسيات
            ============================================ */
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -222,8 +226,17 @@
         }
 
         @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.5); }
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.5);
+            }
         }
 
         .mode-toggle {
@@ -447,8 +460,15 @@
         }
 
         @keyframes pulse-step {
-            0%, 100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-            50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1);
+            }
         }
 
         .step-content {
@@ -786,6 +806,7 @@
                 transform: translateX(-100%);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -803,8 +824,13 @@
         }
 
         @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         .skeleton-text {
@@ -846,14 +872,16 @@
         .connection-banner .spinner {
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* ============================================
@@ -894,6 +922,7 @@
             box-shadow: var(--shadow-lg);
             border: 3px solid white;
             animation: marker-pulse 2s infinite;
+            transition: transform 0.3s ease;
         }
 
         .marker-driver span {
@@ -901,8 +930,15 @@
         }
 
         @keyframes marker-pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4), var(--shadow-lg); }
-            50% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0), var(--shadow-lg); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4), var(--shadow-lg);
+            }
+
+            50% {
+                box-shadow: 0 0 0 12px rgba(59, 130, 246, 0), var(--shadow-lg);
+            }
         }
 
         .marker-customer {
@@ -1099,15 +1135,16 @@
         }
     </style>
 </head>
+
 <body data-view="driver">
 
     <!-- رأس الصفحة -->
     <header class="app-header" role="banner">
         <div class="header-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
             </svg>
             <span>توصيل سريع</span>
         </div>
@@ -1115,20 +1152,16 @@
         <div class="header-order-info">
             <!-- PHP: رقم الطلب -->
             <span class="order-id" aria-label="رقم الطلب">#{{ $order->tracking_code }}</span>
-            <span class="order-status-badge {{ $order->status === 'on_way' ? 'status-on-the-way' : ($order->status === 'delivered' ? 'status-delivered' : 'status-preparing') }}" id="statusBadge" role="status" aria-live="polite">
+            <span
+                class="order-status-badge {{ $order->status === 'on_way' ? 'status-on-the-way' : ($order->status === 'delivered' ? 'status-delivered' : 'status-preparing') }}"
+                id="statusBadge" role="status" aria-live="polite">
                 <span class="status-dot"></span>
-                <span id="statusText">{{ $order->status === 'on_way' ? 'في الطريق' : ($order->status === 'delivered' ? 'تم التسليم' : 'جاهز للتوصيل') }}</span>
+                <span
+                    id="statusText">{{ $order->status === 'on_way' ? 'في الطريق' : ($order->status === 'delivered' ? 'تم التسليم' : 'جاهز للتوصيل') }}</span>
             </span>
         </div>
 
-        <div class="mode-toggle" role="tablist" aria-label="تبديل وضع العرض">
-            <button class="mode-toggle-btn active" data-mode="customer" role="tab" aria-selected="true" aria-label="وضع العميل">
-                العميل
-            </button>
-            <button class="mode-toggle-btn" data-mode="driver" role="tab" aria-selected="false" aria-label="وضع المندوب">
-                المندوب
-            </button>
-        </div>
+
     </header>
 
     <!-- بانر حالة الاتصال -->
@@ -1180,32 +1213,41 @@
             <div class="progress-timeline" role="list" aria-label="مراحل الطلب">
                 <h3>مراحل الطلب</h3>
                 <div class="timeline-steps" id="timelineSteps">
-                    <div class="timeline-step {{ in_array($order->status, ['ready', 'on_way', 'delivered'], true) ? 'completed' : 'pending' }}" role="listitem">
+                    <div class="timeline-step {{ in_array($order->status, ['ready', 'on_way', 'delivered'], true) ? 'completed' : 'pending' }}"
+                        role="listitem">
                         <div class="step-indicator">✓</div>
                         <div class="step-content">
                             <div class="step-title">تم تأكيد الطلب</div>
-                            <div class="step-time" id="step1Time">2:30 م</div>
+                            <div class="step-time" id="step1Time">
+                                {{ $order->created_at ? $order->created_at->format('h:i A') : '—' }}</div>
                         </div>
                     </div>
-                    <div class="timeline-step {{ in_array($order->status, ['on_way', 'delivered'], true) ? 'completed' : 'pending' }}" role="listitem">
+                    <div class="timeline-step {{ in_array($order->status, ['on_way', 'delivered'], true) ? 'completed' : 'pending' }}"
+                        role="listitem">
                         <div class="step-indicator">✓</div>
                         <div class="step-content">
                             <div class="step-title">قيد التحضير</div>
-                            <div class="step-time" id="step2Time">2:35 م</div>
+                            <div class="step-time" id="step2Time">
+                                {{ $order->updated_at && $order->status === 'preparing' ? $order->updated_at->format('h:i A') : '—' }}
+                            </div>
                         </div>
                     </div>
-                    <div class="timeline-step {{ $order->status === 'on_way' ? 'active' : ($order->status === 'delivered' ? 'completed' : 'pending') }}" role="listitem">
+                    <div class="timeline-step {{ $order->status === 'on_way' ? 'active' : ($order->status === 'delivered' ? 'completed' : 'pending') }}"
+                        role="listitem">
                         <div class="step-indicator">⚡</div>
                         <div class="step-content">
                             <div class="step-title">في الطريق إليك</div>
-                            <div class="step-time" id="step3Time">2:42 م</div>
+                            <div class="step-time" id="step3Time">
+                                {{ $order->status === 'on_way' ? $order->updated_at->format('h:i A') : '—' }}</div>
                         </div>
                     </div>
-                    <div class="timeline-step {{ $order->status === 'delivered' ? 'completed' : 'pending' }}" role="listitem">
+                    <div class="timeline-step {{ $order->status === 'delivered' ? 'completed' : 'pending' }}"
+                        role="listitem">
                         <div class="step-indicator">4</div>
                         <div class="step-content">
                             <div class="step-title">تم التسليم</div>
-                            <div class="step-time">—</div>
+                            <div class="step-time">
+                                {{ $order->status === 'delivered' ? $order->updated_at->format('h:i A') : '—' }}</div>
                         </div>
                     </div>
                 </div>
@@ -1222,8 +1264,8 @@
                 <div class="driver-header">
                     <div class="driver-avatar">
                         <!-- PHP: صورة المندوب -->
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%233B82F6'/%3E%3Cellipse cx='50' cy='85' rx='30' ry='25' fill='%233B82F6'/%3E%3C/svg%3E" 
-                             alt="صورة المندوب" loading="lazy" id="driverAvatar">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%233B82F6'/%3E%3Cellipse cx='50' cy='85' rx='30' ry='25' fill='%233B82F6'/%3E%3C/svg%3E"
+                            alt="صورة المندوب" loading="lazy" id="driverAvatar">
                     </div>
                     <div class="driver-info">
                         <!-- PHP: اسم المندوب -->
@@ -1238,19 +1280,20 @@
 
                 <div class="driver-details">
                     <!-- PHP: رقم الهاتف -->
-                    <a href="tel:{{ $order->driver?->phone }}" class="driver-detail-item" aria-label="اتصال بالمندوب">
+                    <a href="tel:{{ $order->driver?->phone }}" class="driver-detail-item"
+                        aria-label="اتصال بالمندوب">
                         <span class="detail-icon">📱</span>
                         <span id="driverPhone">{{ $order->driver?->phone ?? '—' }}</span>
                     </a>
                     <!-- PHP: نوع المركبة -->
                     <div class="driver-detail-item">
                         <span class="detail-icon">🏍️</span>
-                        <span id="driverVehicle">دراجة نارية</span>
+                        <span id="driverVehicle">{{ $order->driver?->vehicle_type ?? 'غير محدد' }}</span>
                     </div>
                     <!-- PHP: رقم اللوحة -->
                     <div class="driver-detail-item">
                         <span class="detail-icon">🔢</span>
-                        <span id="driverPlate">لوحه 1234</span>
+                        <span id="driverPlate">{{ $order->driver?->plate_number ?? 'بدون لوحة' }}</span>
                     </div>
                     <div class="driver-detail-item">
                         <span class="detail-icon">📦</span>
@@ -1262,17 +1305,21 @@
                     <a href="tel:{{ $order->driver?->phone }}" class="btn btn-call" aria-label="اتصال بالمندوب">
                         📞 اتصال
                     </a>
-                    <button class="btn btn-secondary" aria-label="محادثة المندوب" onclick="showToast('info', 'المحادثة', 'سيتم فتح المحادثة قريباً')">
+                    <button class="btn btn-secondary" aria-label="محادثة المندوب"
+                        onclick="showToast('info', 'المحادثة', 'سيتم فتح المحادثة قريباً')">
                         💬 محادثة
                     </button>
                 </div>
 
                 <!-- أزرار خاصة بوضع المندوب -->
-                <div class="driver-view-only" style="margin-top: var(--spacing-md); flex-direction: column; gap: var(--spacing-sm);">
-                    <button class="btn btn-success btn-full" id="btnStartDelivery" onclick="handleStartDelivery()" {{ $order->status === 'delivered' ? 'disabled' : '' }}>
+                <div class="driver-view-only"
+                    style="margin-top: var(--spacing-md); flex-direction: column; gap: var(--spacing-sm);">
+                    <button class="btn btn-success btn-full" id="btnStartDelivery" onclick="handleStartDelivery()"
+                        {{ $order->status === 'delivered' ? 'disabled' : '' }}>
                         🚀 بدء التوصيل
                     </button>
-                    <button class="btn btn-primary btn-full customer-view-only" onclick="showToast('success', 'تم', 'تم تحديث الموقع')">
+                    <button class="btn btn-primary btn-full customer-view-only"
+                        onclick="showToast('success', 'تم', 'تم تحديث الموقع')">
                         📍 تحديث موقعي
                     </button>
                 </div>
@@ -1289,7 +1336,8 @@
                     <!-- PHP: عنوان التوصيل -->
                     <div class="order-detail-row">
                         <span class="label">العنوان:</span>
-                        <span class="value" id="deliveryAddress">{{ $order->delivery_address ?? 'لا يوجد عنوان مسجل' }}</span>
+                        <span class="value"
+                            id="deliveryAddress">{{ $order->delivery_address ?? 'لا يوجد عنوان مسجل' }}</span>
                     </div>
                     <!-- PHP: ملاحظات التوصيل -->
                     <div class="order-detail-row">
@@ -1299,7 +1347,8 @@
                     <!-- PHP: طريقة الدفع -->
                     <div class="order-detail-row">
                         <span class="label">الدفع:</span>
-                        <span class="value">بطاقة ائتمان ✓</span>
+                        <span
+                            class="value">بطاق{{ $order->payment_method === 'cash' ? 'دفع عند الاستلام' : 'دفع إلكتروني' }}</span>
                     </div>
                 </div>
 
@@ -1314,11 +1363,13 @@
                 </div>
 
                 <!-- أزرار خاصة بوضع المندوب -->
-                <div class="driver-view-only" style="margin-top: var(--spacing-md); flex-direction: column; gap: var(--spacing-sm);">
+                <div class="driver-view-only"
+                    style="margin-top: var(--spacing-md); flex-direction: column; gap: var(--spacing-sm);">
                     <a href="tel:{{ $order->customer_phone }}" class="btn btn-call btn-full">
                         📞 اتصال بالعميل
                     </a>
-                    <button class="btn btn-success btn-full" id="btnDelivered" onclick="handleDelivered()" {{ $order->status !== 'on_way' ? 'disabled' : '' }}>
+                    <button class="btn btn-success btn-full" id="btnDelivered" onclick="handleDelivered()"
+                        {{ $order->status !== 'on_way' ? 'disabled' : '' }}>
                         ✓ تم التسليم
                     </button>
                 </div>
@@ -1333,17 +1384,18 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        
         const trackingConfig = {
             orderId: @json($order->id),
-            viewMode: 'driver',
+            viewMode: 'driver', //@json($isDriver ? 'driver' : 'customer'),
             csrfToken: document.querySelector('meta[name="csrf-token"]').content,
             updateInterval: 5000,
-            apiEndpoint: @json(route('driver.order.show', $order)),
-            locationEndpoint: @json(route('driver.location.update', $order)),
-            statusEndpoint: @json(route('driver.status.update', $order)),
+            apiEndpoint: @json(route('driver.order.show', [$order->restaurant->id, $order])),
+            locationEndpoint: @json(route('driver.location.update', [$order->restaurant->id, $order])),
+            statusEndpoint: @json(route('driver.status.update', [$order->restaurant->id, $order])),
             initialData: {
-                restaurant: { name: @json($order->restaurant?->name) },
+                restaurant: {
+                    name: @json($order->restaurant?->name)
+                },
                 customer: {
                     lat: @json($order->delivery_latitude),
                     lng: @json($order->delivery_longitude),
@@ -1356,6 +1408,26 @@
                 },
             },
         };
+
+        // ============================================
+        // المتغيرات والدوال المساعدة
+        // ============================================
+        let lastSentCoords = null;
+        let lastSentTime = 0;
+
+        // دالة حساب المسافة بالمتر بين نقطتين جغرافيين
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            if (typeof L !== 'undefined' && L.latLng) {
+                return L.latLng(lat1, lon1).distanceTo(L.latLng(lat2, lon2));
+            }
+            const R = 6371e3;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
 
         // ============================================
         // نظام تتبع المواقع
@@ -1375,8 +1447,8 @@
                 this.driverPath = [];
                 this.lastRouteKey = null;
                 this.locationWatch = null;
-                
-                // محاكاة حركة المندوب (للعرض التوضيحي)
+
+                // محاكاة حركة المندوب
                 this.simulationAngle = 0;
                 this.simulationCenter = {
                     lat: config.initialData.driver.lat,
@@ -1391,7 +1463,7 @@
                 this.startAutoUpdate();
                 this.setupEventListeners();
                 this.updateLastUpdateTime();
-                
+
                 showToast('success', 'تم الاتصال', 'تم الاتصال بنظام التتبع بنجاح');
             }
 
@@ -1405,19 +1477,22 @@
                     attributionControl: true
                 }).setView([centerLat, centerLng], 14);
 
-                // استخدام OpenStreetMap (مجاني)
+                // استخدام OpenStreetMap
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap contributors',
                     maxZoom: 19
                 }).addTo(this.map);
 
-                // محاولة استخدام OSRM للرسم
                 this.map.attributionControl.addAttribution('Routing: OSRM');
             }
 
             // إضافة الـ markers الأولية
             addInitialMarkers() {
-                const { restaurant, customer, driver } = this.config.initialData;
+                const {
+                    restaurant,
+                    customer,
+                    driver
+                } = this.config.initialData;
                 const customerPoint = customer.lat && customer.lng ? [customer.lat, customer.lng] : null;
                 const driverPoint = driver.lat && driver.lng ? [driver.lat, driver.lng] : null;
 
@@ -1430,14 +1505,16 @@
                     popupAnchor: [0, -40]
                 });
 
-                if (restaurant.lat && restaurant.lng) this.markers.restaurant = L.marker([restaurant.lat, restaurant.lng], {
-                    icon: restaurantIcon
-                }).addTo(this.map).bindPopup(`
-                    <div style="text-align:center;">
-                        <strong>${restaurant.name}</strong><br>
-                        <small>المطعم</small>
-                    </div>
-                `);
+                if (restaurant.lat && restaurant.lng) {
+                    this.markers.restaurant = L.marker([restaurant.lat, restaurant.lng], {
+                        icon: restaurantIcon
+                    }).addTo(this.map).bindPopup(`
+                        <div style="text-align:center;">
+                            <strong>${restaurant.name}</strong><br>
+                            <small>المطعم</small>
+                        </div>
+                    `);
+                }
 
                 // Marker العميل
                 const customerIcon = L.divIcon({
@@ -1452,11 +1529,11 @@
                     this.markers.customer = L.marker(customerPoint, {
                         icon: customerIcon
                     }).addTo(this.map).bindPopup(`
-                    <div style="text-align:center;">
-                        <strong>موقع العميل</strong><br>
-                        <small>${customer.address}</small>
-                    </div>
-                `);
+                        <div style="text-align:center;">
+                            <strong>موقع العميل</strong><br>
+                            <small>${customer.address || ''}</small>
+                        </div>
+                    `);
                 }
 
                 // Marker المندوب
@@ -1472,43 +1549,56 @@
                     this.markers.driver = L.marker(driverPoint, {
                         icon: driverIcon
                     }).addTo(this.map).bindPopup(`
-                    <div class="driver-popup">
-                        <strong>${driver.name}</strong><br>
-                        <small>آخر تحديث: ${new Date().toLocaleTimeString('ar-SA')}</small>
-                    </div>
-                `);
-                }
+                        <div class="driver-popup">
+                            <strong>${driver.name}</strong><br>
+                            <small>آخر تحديث: ${new Date().toLocaleTimeString('ar-SA')}</small>
+                        </div>
+                    `);
 
-                // دائرة الدقة حول المندوب
-                if (driverPoint) this.accuracyCircle = L.circle(driverPoint, {
-                    radius: 50,
-                    color: '#3B82F6',
-                    fillColor: '#3B82F6',
-                    fillOpacity: 0.1,
-                    weight: 1
-                }).addTo(this.map);
+                    // دائرة الدقة حول المندوب
+                    this.accuracyCircle = L.circle(driverPoint, {
+                        radius: 50,
+                        color: '#3B82F6',
+                        fillColor: '#3B82F6',
+                        fillOpacity: 0.1,
+                        weight: 1
+                    }).addTo(this.map);
+                }
 
                 // ضبط حدود الخريطة
                 const points = [customerPoint, driverPoint].filter(Boolean);
-                if (points.length > 1) this.map.fitBounds(L.latLngBounds(points), { padding: [50, 50] });
+                if (points.length > 1) this.map.fitBounds(L.latLngBounds(points), {
+                    padding: [50, 50]
+                });
             }
 
             // جلب البيانات من السيرفر
             async fetchLocationData() {
                 try {
                     const response = await fetch(`${this.config.apiEndpoint}?t=${Date.now()}`, {
-                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
                     });
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const payload = await response.json();
                     const driver = payload.driver || {};
                     const customer = payload.customer || {};
-                    const distance = driver.latitude && driver.longitude && customer.latitude && customer.longitude
-                        ? this.calculateDistance(Number(driver.latitude), Number(driver.longitude), Number(customer.latitude), Number(customer.longitude))
-                        : 0;
+                    const distance = driver.latitude && driver.longitude && customer.latitude && customer.longitude ?
+                        this.calculateDistance(Number(driver.latitude), Number(driver.longitude), Number(customer
+                            .latitude), Number(customer.longitude)) :
+                        0;
                     const eta = distance ? Math.max(1, Math.round(distance * 3)) : null;
                     const data = {
-                        driver: { lat: Number(driver.latitude), lng: Number(driver.longitude), name: this.config.initialData.driver.name, speed: 0, accuracy: 30 },
+                        driver: {
+                            lat: Number(driver.latitude),
+                            lng: Number(driver.longitude),
+                            name: this.config.initialData.driver.name,
+                            speed: 0,
+                            accuracy: 30,
+                            heading: driver.heading
+                        },
                         eta,
                         distance,
                         status: payload.status,
@@ -1524,7 +1614,7 @@
 
             // حساب المسافة (Haversine formula)
             calculateDistance(lat1, lng1, lat2, lng2) {
-                const R = 6371; // نصف قطر الأرض بالكم
+                const R = 6371;
                 const dLat = (lat2 - lat1) * Math.PI / 180;
                 const dLng = (lng2 - lng1) * Math.PI / 180;
                 const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -1537,18 +1627,15 @@
             // معالجة أخطاء الاتصال
             handleConnectionError() {
                 this.retryCount++;
-
                 if (this.retryCount > this.maxRetries) {
                     this.showConnectionError();
                     this.retryCount = 0;
                     return;
                 }
 
-                // Exponential backoff: 5s, 10s, 20s, 40s...
                 const backoffTime = Math.min(1000 * Math.pow(2, this.retryCount), 30000);
-                console.log(`إعادة المحاولة ${this.retryCount} بعد ${backoffTime}ms`);
-
-                document.getElementById('connectionBanner').classList.add('visible');
+                const banner = document.getElementById('connectionBanner');
+                if (banner) banner.classList.add('visible');
 
                 clearTimeout(this.updateTimer);
                 this.updateTimer = setTimeout(() => this.updateLoop(), backoffTime);
@@ -1562,25 +1649,28 @@
                 const data = await this.fetchLocationData();
 
                 if (data) {
-                    document.getElementById('connectionBanner').classList.remove('visible');
-                    if (Number.isFinite(data.driver.lat) && Number.isFinite(data.driver.lng) && data.driver.lat !== 0 && data.driver.lng !== 0) {
+                    const banner = document.getElementById('connectionBanner');
+                    if (banner) banner.classList.remove('visible');
+
+                    if (Number.isFinite(data.driver.lat) && Number.isFinite(data.driver.lng) && data.driver.lat !== 0 &&
+                        data.driver.lng !== 0) {
                         this.updateDriverLocation(data.driver);
                     }
-                    if (data.driver.lat && data.driver.lng && this.config.initialData.customer.lat && this.config.initialData.customer.lng) {
+                    if (data.driver.lat && data.driver.lng && this.config.initialData.customer.lat && this.config
+                        .initialData.customer.lng) {
                         this.updateRoute(data.driver, this.config.initialData.customer);
                     }
                     if (data.eta !== null) this.updateETA(data.eta);
                     if (data.distance) this.updateDistanceInfo(data.distance);
                     this.updateSpeedInfo(data.driver.speed || 0);
                     this.updateOrderStatus(data.status);
-                    if (data.driver.lat && data.driver.lng) this.updateAccuracyCircle(data.driver.lat, data.driver.lng, data.driver.accuracy);
+                    if (data.driver.lat && data.driver.lng) this.updateAccuracyCircle(data.driver.lat, data.driver.lng,
+                        data.driver.accuracy);
                     this.lastUpdate = new Date();
                     this.updateLastUpdateTime();
                 }
 
                 this.isUpdating = false;
-
-                // جدولة التحديث التالي
                 this.updateTimer = setTimeout(() => this.updateLoop(), this.config.updateInterval);
             }
 
@@ -1588,11 +1678,21 @@
             updateDriverLocation(driverData) {
                 if (this.markers.driver) {
                     const newLatLng = [driverData.lat, driverData.lng];
-                    
-                    // تحريك marker بسلاسة
+
                     this.markers.driver.setLatLng(newLatLng);
 
-                    // تحديث popup
+                    if (driverData.heading !== undefined && driverData.heading !== null) {
+                        const iconEl = this.markers.driver.getElement()?.querySelector('.marker-driver');
+                        if (iconEl) iconEl.style.transform = `rotate(${driverData.heading}deg)`;
+                    }
+
+                    if (this.config.viewMode === 'customer') {
+                        this.map.panTo(newLatLng, {
+                            animate: true,
+                            duration: 1.0
+                        });
+                    }
+
                     this.markers.driver.setPopupContent(`
                         <div class="driver-popup">
                             <strong>${driverData.name}</strong><br>
@@ -1600,12 +1700,6 @@
                         </div>
                     `);
 
-                    // تحريك الخريطة لتتبع المندوب (في وضع العميل)
-                    if (this.config.viewMode === 'customer') {
-                        this.map.panTo(newLatLng, { animate: true, duration: 1.0 });
-                    }
-
-                    // تحديث مسار الحركة
                     this.driverPath.push(newLatLng);
                     if (this.driverPath.length > 100) {
                         this.driverPath.shift();
@@ -1630,15 +1724,24 @@
                     .getPropertyValue('--primary-color').trim() || '#3B82F6';
 
                 try {
-                    const routeUrl = `https://router.project-osrm.org/route/v1/driving/${driver.lng},${driver.lat};${customer.lng},${customer.lat}?overview=full&geometries=geojson`;
-                    const response = await fetch(routeUrl, { signal: AbortSignal.timeout(8000) });
+                    const routeUrl =
+                        `https://router.project-osrm.org/route/v1/driving/${driver.lng},${driver.lat};${customer.lng},${customer.lat}?overview=full&geometries=geojson`;
+                    const response = await fetch(routeUrl, {
+                        signal: AbortSignal.timeout(8000)
+                    });
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const data = await response.json();
 
                     if (!data.routes?.[0]?.geometry) throw new Error('No route geometry');
 
                     this.routeLayer = L.geoJSON(data.routes[0].geometry, {
-                        style: { color: primaryColor, weight: 5, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }
+                        style: {
+                            color: primaryColor,
+                            weight: 5,
+                            opacity: 0.8,
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                        }
                     }).addTo(this.map);
                 } catch (error) {
                     this.routeLayer = L.polyline(routePoints, {
@@ -1653,30 +1756,22 @@
             // تحديث وقت الوصول المتوقع
             updateETA(eta) {
                 const etaElement = document.getElementById('etaTime');
-                if (etaElement) {
-                    etaElement.textContent = eta;
-                }
+                if (etaElement) etaElement.textContent = eta;
 
                 const timeValue = document.getElementById('timeValue');
-                if (timeValue) {
-                    timeValue.textContent = `${eta} دقائق`;
-                }
+                if (timeValue) timeValue.textContent = `${eta} دقائق`;
             }
 
             // تحديث معلومات المسافة
             updateDistanceInfo(distance) {
                 const distanceEl = document.getElementById('distanceValue');
-                if (distanceEl) {
-                    distanceEl.textContent = `${distance.toFixed(1)} كم`;
-                }
+                if (distanceEl) distanceEl.textContent = `${distance.toFixed(1)} كم`;
             }
 
             // تحديث معلومات السرعة
             updateSpeedInfo(speed) {
                 const speedEl = document.getElementById('speedValue');
-                if (speedEl) {
-                    speedEl.textContent = `${Math.round(speed)} كم/س`;
-                }
+                if (speedEl) speedEl.textContent = `${Math.round(speed)} كم/س`;
             }
 
             // تحديث حالة الطلب
@@ -1686,11 +1781,31 @@
                 const steps = document.querySelectorAll('.timeline-step');
 
                 const statusMap = {
-                    'confirmed': { class: 'status-confirmed', text: 'تم التأكيد', step: 0 },
-                    'preparing': { class: 'status-preparing', text: 'قيد التحضير', step: 1 },
-                    'ready': { class: 'status-preparing', text: 'جاهز للتوصيل', step: 1 },
-                    'on_way': { class: 'status-on-the-way', text: 'في الطريق', step: 2 },
-                    'delivered': { class: 'status-delivered', text: 'تم التسليم', step: 3 }
+                    'confirmed': {
+                        class: 'status-confirmed',
+                        text: 'تم التأكيد',
+                        step: 0
+                    },
+                    'preparing': {
+                        class: 'status-preparing',
+                        text: 'قيد التحضير',
+                        step: 1
+                    },
+                    'ready': {
+                        class: 'status-preparing',
+                        text: 'جاهز للتوصيل',
+                        step: 1
+                    },
+                    'on_way': {
+                        class: 'status-on-the-way',
+                        text: 'في الطريق',
+                        step: 2
+                    },
+                    'delivered': {
+                        class: 'status-delivered',
+                        text: 'تم التسليم',
+                        step: 3
+                    }
                 };
 
                 const info = statusMap[status];
@@ -1703,7 +1818,6 @@
                     if (startButton && status === 'delivered') startButton.disabled = true;
                     if (deliveredButton && status === 'delivered') deliveredButton.disabled = true;
 
-                    // تحديث خطوات الجدول الزمني
                     steps.forEach((step, index) => {
                         step.classList.remove('completed', 'active', 'pending');
                         if (index < info.step) {
@@ -1728,29 +1842,33 @@
             // تحديث وقت آخر تحديث
             updateLastUpdateTime() {
                 const el = document.getElementById('lastUpdateTime');
-                if (el) {
-                    el.textContent = new Date().toLocaleTimeString('ar-SA');
-                }
+                if (el) el.textContent = new Date().toLocaleTimeString('ar-SA');
             }
 
             // عرض خطأ الاتصال
             showConnectionError() {
                 showToast('error', 'خطأ في الاتصال', 'تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.');
-                document.getElementById('connectionBanner').innerHTML = `
-                    <span>⚠️</span>
-                    <span>انقطع الاتصال - <button onclick="tracker.retryConnection()" style="background:white;color:var(--danger-color);border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-weight:bold;">إعادة المحاولة</button></span>
-                `;
-                document.getElementById('connectionBanner').classList.add('visible');
+                const banner = document.getElementById('connectionBanner');
+                if (banner) {
+                    banner.innerHTML = `
+                        <span>⚠️</span>
+                        <span>انقطع الاتصال - <button onclick="tracker.retryConnection()" style="background:white;color:var(--danger-color);border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-weight:bold;">إعادة المحاولة</button></span>
+                    `;
+                    banner.classList.add('visible');
+                }
             }
 
             // إعادة المحاولة
             retryConnection() {
                 this.retryCount = 0;
-                document.getElementById('connectionBanner').classList.remove('visible');
-                document.getElementById('connectionBanner').innerHTML = `
-                    <div class="spinner"></div>
-                    <span>جاري إعادة الاتصال...</span>
-                `;
+                const banner = document.getElementById('connectionBanner');
+                if (banner) {
+                    banner.classList.remove('visible');
+                    banner.innerHTML = `
+                        <div class="spinner"></div>
+                        <span>جاري إعادة الاتصال...</span>
+                    `;
+                }
                 this.updateLoop();
             }
 
@@ -1769,7 +1887,6 @@
 
             // إعداد مستمعات الأحداث
             setupEventListeners() {
-                // تبديل الوضع
                 document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const mode = btn.dataset.mode;
@@ -1777,12 +1894,10 @@
                     });
                 });
 
-                // إيقاف التحديث عند مغادرة الصفحة
                 window.addEventListener('beforeunload', () => {
                     this.stopAutoUpdate();
                 });
 
-                // إيقاف مؤقت عند عدم النشاط
                 document.addEventListener('visibilitychange', () => {
                     if (document.hidden) {
                         this.stopAutoUpdate();
@@ -1797,23 +1912,19 @@
                 document.body.setAttribute('data-view', mode);
                 this.config.viewMode = mode;
 
-                // تحديث أزرار التبديل
                 document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
                     const isActive = btn.dataset.mode === mode;
                     btn.classList.toggle('active', isActive);
                     btn.setAttribute('aria-selected', isActive);
                 });
 
-                // تحديث الخريطة
                 if (mode === 'driver') {
                     const customer = this.config.initialData.customer;
-                    this.map.panTo([customer.lat, customer.lng]);
+                    if (customer.lat && customer.lng) this.map.panTo([customer.lat, customer.lng]);
                     showToast('info', 'وضع المندوب', 'تم التبديل إلى وضع المندوب');
                 } else {
                     const driver = this.markers.driver?.getLatLng();
-                    if (driver) {
-                        this.map.panTo([driver.lat, driver.lng]);
-                    }
+                    if (driver) this.map.panTo([driver.lat, driver.lng]);
                     showToast('info', 'وضع العميل', 'تم التبديل إلى وضع العميل');
                 }
             }
@@ -1824,6 +1935,7 @@
         // ============================================
         function showToast(type, title, message, duration = 5000) {
             const container = document.getElementById('toastContainer');
+            if (!container) return;
             const icons = {
                 success: '✅',
                 error: '❌',
@@ -1845,7 +1957,6 @@
 
             container.appendChild(toast);
 
-            // إزالة تلقائية
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.style.animation = 'slideInToast 0.3s ease reverse forwards';
@@ -1855,7 +1966,7 @@
         }
 
         // ============================================
-        // دوال الأزرار
+        // دوال الأزرار والشبكة
         // ============================================
         async function postTracking(url, payload) {
             const response = await fetch(url, {
@@ -1880,28 +1991,77 @@
             }
 
             const button = document.getElementById('btnStartDelivery');
-            button.disabled = true;
-            button.textContent = 'جاري تحديد موقعك...';
-            tracker.locationWatch = navigator.geolocation.watchPosition(async (position) => {
-                try {
-                    await postTracking(trackingConfig.locationEndpoint, {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    });
-                    button.disabled = false;
-                    button.textContent = 'إيقاف مشاركة الموقع';
-                    document.getElementById('btnDelivered').disabled = false;
-                    tracker.updateOrderStatus('on_way');
-                    showToast('success', 'تم تحديث الموقع', 'تم حفظ موقعك الحالي للعميل.');
-                } catch (error) {
-                    button.disabled = false;
-                    showToast('error', 'تعذر تحديث الموقع', 'تحقق من اتصال الإنترنت ثم أعد المحاولة.');
-                }
-            }, () => {
-                button.disabled = false;
-                button.textContent = 'إعادة المحاولة';
-                showToast('warning', 'السماح بالموقع مطلوب', 'اسمح للمتصفح بالوصول إلى موقعك.');
-            }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'جاري تحديد موقعك...';
+            }
+
+            tracker.locationWatch = navigator.geolocation.watchPosition(
+                async (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        const heading = position.coords.heading;
+                        const now = Date.now();
+
+                        // فلترة بالوقت: منع الإرسال إن لم تمضِ 5 ثوانٍ
+                        if (now - lastSentTime < 5000) {
+                            return;
+                        }
+
+                        // فلترة بالمسافة: منع الإرسال إن كانت الحركة أقل من 10 أمتار ولم تمضِ 30 ثانية
+                        if (lastSentCoords) {
+                            const distance = getDistanceInMeters(
+                                lastSentCoords.latitude,
+                                lastSentCoords.longitude,
+                                latitude,
+                                longitude
+                            );
+                            if (distance < 10 && (now - lastSentTime < 30000)) {
+                                return;
+                            }
+                        }
+
+                        try {
+                            await postTracking(trackingConfig.locationEndpoint, {
+                                latitude: latitude,
+                                longitude: longitude,
+                                heading: heading
+                            });
+
+                            lastSentCoords = {
+                                latitude,
+                                longitude
+                            };
+                            lastSentTime = now;
+
+                            if (button) {
+                                button.disabled = false;
+                                button.textContent = 'إيقاف مشاركة الموقع';
+                            }
+                            const btnDelivered = document.getElementById('btnDelivered');
+                            if (btnDelivered) btnDelivered.disabled = false;
+
+                            tracker.updateOrderStatus('on_way');
+                            showToast('success', 'تم تحديث الموقع', 'تم حفظ موقعك الحالي للعميل.');
+                        } catch (error) {
+                            if (button) button.disabled = false;
+                            showToast('error', 'تعذر تحديث الموقع', 'تحقق من اتصال الإنترنت ثم أعد المحاولة.');
+                        }
+                    },
+                    (error) => {
+                        if (button) button.disabled = false;
+                        if (error.code === error.PERMISSION_DENIED) {
+                            alert('يرجى تفعيل خدمة تحديد الموقع (GPS) في المتصفح لمشاركة مسار الطلب.');
+                        } else {
+                            if (button) button.textContent = 'إعادة المحاولة';
+                            showToast('warning', 'السماح بالموقع مطلوب', 'اسمح للمتصفح بالوصول إلى موقعك.');
+                        }
+                    }, {
+                        enableHighAccuracy: true,
+                        maximumAge: 10000,
+                        timeout: 15000
+                    }
+            );
         }
 
         async function handleStartDelivery() {
@@ -1909,7 +2069,7 @@
             if (tracker.locationWatch) {
                 navigator.geolocation.clearWatch(tracker.locationWatch);
                 tracker.locationWatch = null;
-                button.textContent = 'استئناف مشاركة الموقع';
+                if (button) button.textContent = 'استئناف مشاركة الموقع';
                 showToast('info', 'تم إيقاف المشاركة', 'يمكنك استئناف مشاركة موقعك في أي وقت.');
                 return;
             }
@@ -1925,10 +2085,17 @@
             if (!confirm('هل تريد تأكيد تسليم الطلب؟')) return;
 
             try {
-                await postTracking(trackingConfig.statusEndpoint, { status: 'delivered' });
+                await postTracking(trackingConfig.statusEndpoint, {
+                    status: 'delivered'
+                });
                 if (tracker.locationWatch) navigator.geolocation.clearWatch(tracker.locationWatch);
-                document.getElementById('btnDelivered').disabled = true;
-                document.getElementById('btnDelivered').textContent = '✓ تم التسليم';
+
+                const btnDelivered = document.getElementById('btnDelivered');
+                if (btnDelivered) {
+                    btnDelivered.disabled = true;
+                    btnDelivered.textContent = '✓ تم التسليم';
+                }
+
                 tracker.stopAutoUpdate();
                 tracker.updateOrderStatus('delivered');
                 showToast('success', 'تم التسليم', 'تم حفظ تسليم الطلب بنجاح.');
@@ -1948,4 +2115,5 @@
         });
     </script>
 </body>
+
 </html>

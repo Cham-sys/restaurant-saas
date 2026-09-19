@@ -14,6 +14,7 @@ use App\Models\Restaurant;
 use App\Models\RestaurantTable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -54,7 +55,10 @@ class OrderController extends Controller
     public function checkout($slug)
     {
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
-        $cart = session('cart', []);
+        
+        // ✅ التعديل الأول: قراءة السلة الخاصة بهذا المطعم فقط
+        $sessionKey = 'cart_' . $restaurant->id;
+        $cart = session($sessionKey, []);
 
         // إذا كانت السلة فارغة نعيد المستخدم للقائمة
         if (empty($cart)) {
@@ -69,7 +73,7 @@ class OrderController extends Controller
             ->keyBy('id');
 
         if ($products->count() !== count(array_unique($productIds))) {
-            session()->forget('cart');
+            session()->forget($sessionKey); // حذف السلة المعطوبة
 
             return redirect()->route('restaurant.menu', $slug)
                 ->with('error', 'تحتوي السلة على منتج غير متاح لهذا المطعم');
@@ -119,8 +123,10 @@ class OrderController extends Controller
             'coupon_id' => 'nullable|exists:coupons,id',
             'coupon_code' => 'nullable|string',
         ]);
-
-        $cart = session('cart', []);
+        dd($slug , $request ,$restaurant);
+        $sessionKey = 'cart_' . $restaurant->id;
+        $cart = session($sessionKey, []);
+        
         if (empty($cart)) {
             return redirect()->back()->with('error', 'لا يمكن إتمام طلب فارغ');
         }
@@ -197,7 +203,7 @@ class OrderController extends Controller
         $deliveryFee = $restaurant->delivery_fee ?? 0;
         $totalDiscount = $offerDiscount + $couponDiscount;
         $finalAmount = $subtotal + $tax + $deliveryFee - $totalDiscount;
-
+        $deviceToken = Str::random(40);
         // إنشاء سجل الطلب
         $order = Order::create([
             'restaurant_id' => $restaurant->id,
@@ -211,8 +217,8 @@ class OrderController extends Controller
             'delivery_city' => $restaurant->city,
             'delivery_fee' => $table ? 0 : $deliveryFee,
             'subtotal' => $subtotal,
-            'discount' => $offerDiscount, // خصم العرض
-            'coupon_discount' => $couponDiscount, // خصم الكوبون
+            'discount' => $offerDiscount, 
+            'coupon_discount' => $couponDiscount, 
             'offer_id' => $appliedOfferId,
             'coupon_id' => $appliedCouponId,
             'coupon_code' => $appliedCouponCode,
@@ -222,9 +228,10 @@ class OrderController extends Controller
             'payment_status' => 'pending',
             'notes' => $request->notes,
             'status' => 'pending',
+            'device_token' => $deviceToken,
             'tracking_code' => 'ORD-'.strtoupper(Str::random(6)),
         ]);
-
+        Cookie::queue('order_device_token_' . $order->id, $deviceToken, 60 * 24 * 7);
         // حفظ عناصر الطلب
         foreach ($itemsData as $item) {
             $product = $products->get($item['product_id']);
@@ -252,9 +259,12 @@ class OrderController extends Controller
             'status' => 'pending',
         ]);
 
-        session()->forget('cart');
+        // ✅ التعديل الثالث: حذف سلة هذا المطعم فقط بعد نجاح الطلب
+        session()->forget($sessionKey);
         session()->forget(['restaurant_table_id', 'restaurant_table_restaurant_id']);
+        
         event(new OrderCreated($order));
+        
         return redirect()->route('order.success', [$slug, $order->tracking_code]);
     }
 
@@ -282,7 +292,6 @@ class OrderController extends Controller
 
         $couponCode = strtoupper(trim($request->coupon_code));
 
-        // البحث عن الكوبون
         $coupon = Coupon::where('restaurant_id', $restaurant->id)
             ->where('code', $couponCode)
             ->first();
@@ -294,7 +303,6 @@ class OrderController extends Controller
             ]);
         }
 
-        // التحقق من الصلاحية
         $validation = $coupon->isValidFor($request->subtotal, $request->customer_phone);
 
         if (! $validation['valid']) {
@@ -304,7 +312,6 @@ class OrderController extends Controller
             ]);
         }
 
-        // حساب مبلغ الخصم
         $discountAmount = $coupon->getDiscountAmount($request->subtotal);
 
         return response()->json([
@@ -329,7 +336,6 @@ class OrderController extends Controller
             'subtotal' => 'required|numeric|min:0',
         ]);
 
-        // البحث عن العرض
         $offerQuery = Offer::where('restaurant_id', $restaurant->id)
             ->where('is_active', true)
             ->where(function ($q) {
@@ -353,7 +359,6 @@ class OrderController extends Controller
             ]);
         }
 
-        // التحقق من الحد الأدنى للطلب
         if ($request->subtotal < $offer->min_order_amount) {
             return response()->json([
                 'success' => false,
@@ -361,7 +366,6 @@ class OrderController extends Controller
             ]);
         }
 
-        // حساب مبلغ الخصم
         $discountAmount = $offer->getDiscountAmount($request->subtotal);
 
         return response()->json([
@@ -418,7 +422,6 @@ class OrderController extends Controller
             ->where('tracking_code', $code)
             ->firstOrFail();
         $themePath = ThemeHelper::getThemePath($restaurant);
-
         return view("themes.{$themePath}.cart.success", compact('restaurant', 'order'));
     }
 }

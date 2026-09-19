@@ -39,7 +39,7 @@ class OrderCreated implements ShouldBroadcastNow
     }
     public function broadcastAs(): string
     {
-        return '.order.created';
+        return 'order.created';
     }
 
     public function broadcastWith(): array

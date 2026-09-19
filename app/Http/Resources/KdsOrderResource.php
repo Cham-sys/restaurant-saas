@@ -24,11 +24,11 @@ class KdsOrderResource extends JsonResource
             // تحويل حالة pending في لارافيل إلى new للسكربت
             'status' => $this->status === 'pending' ? 'new' : $this->status, 
             'created_at' => $this->created_at->toIso8601String(),
+            'notes' => $this->notes ?? '',
             'items' => $this->items->map(function ($item) {
                 return [
                     'name' => $item->name, // أو $item->product_name حسب جدولك
                     'qty' => $item->quantity,
-                    'notes' => $order->notes ?? '',
                 ];
             }),
         ];
