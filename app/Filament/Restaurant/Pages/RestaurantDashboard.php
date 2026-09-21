@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Pages;
+namespace App\Filament\Restaurant\Pages;
 
 use App\Services\RestaurantDashboardService;
 use BackedEnum;

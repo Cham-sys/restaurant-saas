@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Categories;
+namespace App\Filament\Sham\Resources;
 
 use App\Filament\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Resources\Categories\Pages\EditCategory;
@@ -47,18 +47,7 @@ class CategoryResource extends Resource
         return CategoriesTable::configure($table);
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        $user = auth('web')->user();
-
-        if ($user instanceof User && filled($user->restaurant_id)) {
-            $query->where('restaurant_id', $user->restaurant_id);
-        }
-
-        return $query;
-    }
+    
 
     public static function getRelations(): array
     {

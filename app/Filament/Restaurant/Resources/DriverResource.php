@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Drivers;
+namespace App\Filament\Restaurant\Resources;
 
 use App\Filament\Resources\Drivers\Pages\CreateDriver;
 use App\Filament\Resources\Drivers\Pages\EditDriver;

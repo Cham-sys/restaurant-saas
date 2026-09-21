@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\RestaurantTables;
+namespace App\Filament\Restaurant\Resources;
 
 use App\Filament\Resources\RestaurantTables\Pages\CreateRestaurantTable;
 use App\Filament\Resources\RestaurantTables\Pages\EditRestaurantTable;
@@ -45,7 +45,8 @@ class RestaurantTableResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('restaurant_id', Auth::user()->restaurant_id);
+        return parent::getEloquentQuery()
+            ->where('restaurant_id', auth()->user()?->restaurant_id);
     }
 
     public static function getRelations(): array

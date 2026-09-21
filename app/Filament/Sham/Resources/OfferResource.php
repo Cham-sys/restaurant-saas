@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Offers;
+namespace App\Filament\Sham\Resources;
 
 use App\Filament\Resources\Offers\Pages\CreateOffer;
 use App\Filament\Resources\Offers\Pages\EditOffer;
@@ -50,16 +50,7 @@ class OfferResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        if (auth()->user()->restaurant_id) {
-            $query->where('restaurant_id', auth()->user()->restaurant_id);
-        }
-
-        return $query;
-    }
+    
 
     public static function getPages(): array
     {

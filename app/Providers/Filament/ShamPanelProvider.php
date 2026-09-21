@@ -55,7 +55,8 @@ class ShamPanelProvider extends PanelProvider
                 ThemeResource::class,
                 InvoiceResource::class
             ])
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->discoverResources(in: app_path('Filament/Sham/Resources'), for: 'App\\Filament\\Sham\\Resources')
+            ->discoverPages(in: app_path('Filament/Sham/Pages'), for: 'App\\Filament\\Sham\\Pages')
             ->pages([
                 Dashboard::class,
             ])

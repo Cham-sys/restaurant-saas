@@ -2,8 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\RestaurantDashboard;
-use App\Filament\Pages\RestaurantThemeSettings;
+use App\Filament\Restaurant\Pages\RestaurantDashboard;
+use App\Filament\Restaurant\Pages\RestaurantThemeSettings;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Coupons\CouponResource;
 use App\Filament\Resources\Drivers\DriverResource;
@@ -69,7 +69,8 @@ class RestaurantPanelProvider extends PanelProvider
                 DriverResource::class,
                 RestaurantTableResource::class,
             ])
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverResources(in: app_path('Filament/Restaurant/Resources'), for: 'App\\Filament\\Restaurant\\Resources')
+            ->discoverPages(in: app_path('Filament/Restaurant/Pages'), for: 'App\\Filament\\Restaurant\\Pages')
             ->pages([
                 RestaurantDashboard::class,
                 RestaurantThemeSettings::class,

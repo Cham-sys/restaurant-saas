@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Themes;
+namespace App\Filament\Sham\Resources;
 
 use App\Filament\Resources\Themes\Pages\CreateTheme;
 use App\Filament\Resources\Themes\Pages\EditTheme;

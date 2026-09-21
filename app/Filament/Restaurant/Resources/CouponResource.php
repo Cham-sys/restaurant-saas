@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Coupons;
+namespace App\Filament\Restaurant\Resources;
 
 use App\Filament\Resources\Coupons\Pages\CreateCoupon;
 use App\Filament\Resources\Coupons\Pages\EditCoupon;

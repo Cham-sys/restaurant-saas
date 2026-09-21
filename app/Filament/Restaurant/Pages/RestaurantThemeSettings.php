@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Pages;
+namespace App\Filament\Restaurant\Pages;
 
 use BackedEnum;
 use Filament\Pages\Page;

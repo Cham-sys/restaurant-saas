@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Invoices;
+namespace App\Filament\Sham\Resources;
 
 use App\Filament\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Resources\Invoices\Pages\EditInvoice;
@@ -60,22 +60,5 @@ class InvoiceResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): EloquentBuilder
-    {
-        $query = parent::getEloquentQuery();
-
-        $user = auth()->user();
-
-        // إذا كان Super Admin، يرى كل الفواتير
-        if ($user && $user->role === 'super_admin') {
-            return $query;
-        }
-
-        // إذا كان مدير مطعم، يرى فواتير مطعمه فقط
-        if ($user && filled($user->restaurant_id)) {
-            $query->where('restaurant_id', $user->restaurant_id);
-        }
-
-        return $query;
-    }
+    
 }

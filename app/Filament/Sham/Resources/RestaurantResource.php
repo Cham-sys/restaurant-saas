@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Restaurants;
+namespace App\Filament\Sham\Resources;
 
 use App\Filament\Resources\Restaurants\Pages\CreateRestaurant;
 use App\Filament\Resources\Restaurants\Pages\EditRestaurant;
