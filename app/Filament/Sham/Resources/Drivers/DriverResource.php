@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Filament\Sham\Resources\Drivers;
+
+use App\Filament\Sham\Resources\Drivers\Pages\CreateDriver;
+use App\Filament\Sham\Resources\Drivers\Pages\EditDriver;
+use App\Filament\Sham\Resources\Drivers\Pages\ListDrivers;
+use App\Filament\Sham\Resources\Drivers\Schemas\DriverForm;
+use App\Filament\Sham\Resources\Drivers\Tables\DriversTable;
+use App\Models\User;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
+
+class DriverResource extends Resource
+{
+    protected static ?string $model = User::class;
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-truck';
+
+    protected static ?string $navigationLabel = 'مندوبو التوصيل';
+
+    protected static string|UnitEnum|null $navigationGroup = 'التشغيل';
+
+    protected static ?int $navigationSort = 4;
+
+    protected static ?string $modelLabel = 'مندوب';
+
+    protected static ?string $pluralModelLabel = 'مندوبو التوصيل';
+
+    public static function form(Schema $schema): Schema
+    {
+        return DriverForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return DriversTable::configure($table);
+    }
+
+    
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListDrivers::route('/'),
+            'create' => CreateDriver::route('/create'),
+            'edit' => EditDriver::route('/{record}/edit'),
+        ];
+    }
+}

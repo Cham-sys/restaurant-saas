@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Filament\Restaurant\Resources\Offers;
+
+use App\Filament\Restaurant\Resources\Offers\Pages\CreateOffer;
+use App\Filament\Restaurant\Resources\Offers\Pages\EditOffer;
+use App\Filament\Restaurant\Resources\Offers\Pages\ListOffers;
+use App\Filament\Restaurant\Resources\Offers\Schemas\OfferForm;
+use App\Filament\Restaurant\Resources\Offers\Tables\OffersTable;
+use App\Models\Offer;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
+
+class OfferResource extends Resource
+{
+    protected static ?string $model = Offer::class;
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';
+
+    protected static ?string $recordTitleAttribute = 'Offer';
+
+    protected static ?string $navigationLabel = 'العروض';
+
+    protected static string|UnitEnum|null $navigationGroup = 'التسويق';
+
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $modelLabel = 'عرض';
+
+    protected static ?string $pluralModelLabel = 'العروض';
+
+    public static function form(Schema $schema): Schema
+    {
+        return OfferForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return OffersTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()->restaurant_id) {
+            $query->where('restaurant_id', auth()->user()->restaurant_id);
+        }
+
+        return $query;
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListOffers::route('/'),
+            'create' => CreateOffer::route('/create'),
+            'edit' => EditOffer::route('/{record}/edit'),
+        ];
+    }
+}

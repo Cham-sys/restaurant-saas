@@ -2,12 +2,12 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Resources\Categories\CategoryResource;
-use App\Filament\Resources\Invoices\InvoiceResource;
-use App\Filament\Resources\Orders\OrderResource;
-use App\Filament\Resources\Products\ProductResource;
-use App\Filament\Resources\Restaurants\RestaurantResource;
-use App\Filament\Resources\Themes\ThemeResource;
+use App\Filament\Sham\Resources\Categories\CategoryResource;
+use App\Filament\Sham\Resources\Invoices\InvoiceResource;
+use App\Filament\Sham\Resources\Orders\OrderResource;
+use App\Filament\Sham\Resources\Products\ProductResource;
+use App\Filament\Sham\Resources\Restaurants\RestaurantResource;
+use App\Filament\Sham\Resources\Themes\ThemeResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
