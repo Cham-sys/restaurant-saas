@@ -2,11 +2,11 @@
 
 namespace App\Filament\Restaurant\Resources\Drivers;
 
-use App\Filament\Resources\Drivers\Pages\CreateDriver;
-use App\Filament\Resources\Drivers\Pages\EditDriver;
-use App\Filament\Resources\Drivers\Pages\ListDrivers;
-use App\Filament\Resources\Drivers\Schemas\DriverForm;
-use App\Filament\Resources\Drivers\Tables\DriversTable;
+use App\Filament\Restaurant\Resources\Drivers\Pages\CreateDriver;
+use App\Filament\Restaurant\Resources\Drivers\Pages\EditDriver;
+use App\Filament\Restaurant\Resources\Drivers\Pages\ListDrivers;
+use App\Filament\Restaurant\Resources\Drivers\Schemas\DriverForm;
+use App\Filament\Restaurant\Resources\Drivers\Tables\DriversTable;
 use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
