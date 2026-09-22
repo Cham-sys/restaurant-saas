@@ -147,14 +147,15 @@
     
     console.log("🔍 البيانات الواردة من Laravel:", initialOrders); // سطر تشخيصي مهم جداً
 
-    const KDS_CONFIG = @json([
-        'updateUrlTemplate' => route("kitchen.orders.update", ["order" => ":id", 'slug' => $restaurant->slug ?? 'default']),
+    const KDS_CONFIG = {{  json_encode([
+        'updateUrlTemplate' => url('/kitchen/'.($restaurant->slug ?? 'default').'/orders/:id/status'),
+        'ordersUrl' => url('/kitchen/'.($restaurant->slug ?? 'default').'/orders'),
         'updateInterval' => 30000,
         'urgentThreshold' => 15,
         'restaurantId' => $restaurant->id ?? 1,
         'csrfToken' => csrf_token(),
         'demoMode' => false,
-    ]);
+    ])}};
 
     class KitchenDisplaySystem {
         constructor(config) {
@@ -313,7 +314,7 @@
 
         async fetchOrders() {
             try {
-                const response = await fetch(`/api/kds/orders?restaurant_id=${this.config.restaurantId}&t=${Date.now()}`, {
+                const response = await fetch(`${this.config.ordersUrl}?t=${Date.now()}`, {
                     headers: { 'Accept': 'application/json', 'X-CSRF-Token': this.config.csrfToken }
                 });
                 if (response.ok) {
@@ -435,7 +436,7 @@
                         ${item.notes ? `<div class="item-note"><i class="fa-solid fa-triangle-exclamation"></i><span>${this.escapeHtml(item.notes)}</span></div>` : ''}
                     </div>
                 </li>
-            `).join('');
+            `).join('') || '<li class="item-row"><span class="item-details">لا توجد تفاصيل للأصناف</span></li>';
 
             let actionsHtml = '';
             if (order.status === 'new') {
@@ -455,7 +456,7 @@
                     <div class="${timerClass}"><i class="fa-regular fa-clock"></i><span>منذ ${elapsed} د</span></div>
                 </header>
                 <div class="order-info">
-                    <div class="order-id-row"><h3 class="order-id">#${order.id}</h3>${extraInfo}</div>
+                    <div class="order-id-row"><h3 class="order-id">#${this.escapeHtml(order.display_id || order.id)}</h3>${extraInfo}</div>
                     ${order.customer_name ? `<div class="customer-name"><i class="fa-regular fa-user"></i><span>${this.escapeHtml(order.customer_name)}</span></div>` : ''}
                 </div>
                 <ul class="items-list">${itemsHtml}</ul>

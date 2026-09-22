@@ -82,6 +82,9 @@ Route::middleware(['auth'])->prefix('kitchen')->name('kitchen.')->group(function
     // عرض الشاشة
     Route::get('/{slug}/display', [RestaurantController::class, 'kds'])->name('display');
     
+    // تحديث الطلبات المعروضة دورياً
+    Route::get('/{slug}/orders', [RestaurantController::class, 'kdsOrders'])->name('orders.index');
+
     // تحديث الحالة (API داخلي)
     Route::patch('/{slug}/orders/{order}/status', [RestaurantController::class, 'updateStatusKds'])->name('orders.update');
 });
