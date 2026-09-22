@@ -56,7 +56,7 @@ class ThemeSettingsController extends Controller
             }
         }
 
-        $mergedSettings = array_replace(
+        $mergedSettings = array_replace_recursive(
             $restaurant->theme->default_settings ?? [],
             $restaurant->themeSettings?->settings ?? [],
             $filteredSettings

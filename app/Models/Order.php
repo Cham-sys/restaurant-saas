@@ -24,6 +24,7 @@ class Order extends Model
         'coupon_code',
         'coupon_discount',
         'delivery_type',
+        'device_token',
         'delivery_address',
         'delivery_latitude',
         'delivery_longitude',
@@ -47,6 +48,7 @@ class Order extends Model
         'review',
         'offer_id',
         'discount_amount',
+        
     ];
 
     protected function casts(): array
@@ -58,6 +60,12 @@ class Order extends Model
             'driver_longitude' => 'decimal:7',
             'driver_location_updated_at' => 'datetime',
         ];
+    }
+    protected $appends = ['type'];
+
+    public function getTypeAttribute()
+    {
+        return $this->attributes['delivery_type'] ?? 'delivery';
     }
 
     // العلاقة مع التقييم
@@ -89,7 +97,7 @@ class Order extends Model
 
     public function driver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'driver_id');
+        return $this->belongsTo(Driver::class, 'driver_id');
     }
 
     public function restaurantTable(): BelongsTo
@@ -107,7 +115,7 @@ class Order extends Model
         parent::boot();
 
         static::creating(function ($order) {
-            if (auth()->check() && auth()->user()->restaurant_id) {
+            if (empty($order->restaurant_id) && auth()->check() && auth()->user()->restaurant_id) {
                 $order->restaurant_id = auth()->user()->restaurant_id;
             }
         });
@@ -117,4 +125,5 @@ class Order extends Model
     {
         return $this->hasMany(Order_item::class);
     }
+    
 }

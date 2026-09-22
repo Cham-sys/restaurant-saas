@@ -79,62 +79,68 @@ class PwaController extends Controller
     /**
      * Service Worker ديناميكي لكل مطعم
      */
-    public function serviceWorker($slug)
-    {
-        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+    /**
+ * Service Worker ديناميكي لكل مطعم
+ */
+public function serviceWorker($slug)
+{
+    $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
 
-        $sw = <<<JS
-const CACHE_NAME = '{$restaurant->slug}-v1';
+    $sw = <<<JS
+const CACHE_NAME = '{$restaurant->slug}-v3'; // رفع الإصدار لـ v3 لتطبيق التعديلات
 const urlsToCache = [
     '/{$restaurant->slug}',
     '/{$restaurant->slug}/manifest.json',
-    'https://cdn.tailwindcss.com',
     'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap'
 ];
 
-// تثبيت Service Worker
 self.addEventListener('install', event => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Opened cache for {$restaurant->slug}');
-                return cache.addAll(urlsToCache);
-            })
+            .then(cache => cache.addAll(urlsToCache))
     );
 });
 
-// جلب الموارد من الـ Cache
+// جلب الموارد وتفادي أخطاء الشبكة Uncaught TypeError
 self.addEventListener('fetch', event => {
+    // معالجة طلبات GET فقط لتجنب التعارض مع طلبات POST أو API
+    if (event.request.method !== 'GET') return;
+
     event.respondWith(
         caches.match(event.request)
             .then(response => {
                 if (response) {
                     return response;
                 }
-                return fetch(event.request);
+                // إضافة catch لمنع انهيار الـ Service Worker عند فشل جلب روابط خارجية
+                return fetch(event.request).catch(() => {
+                    return new Response('', {
+                        status: 408,
+                        statusText: 'Network Request Failed'
+                    });
+                });
             })
     );
 });
 
-// تحديث Service Worker
 self.addEventListener('activate', event => {
-    const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
-                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                    if (cacheName !== CACHE_NAME) {
                         return caches.delete(cacheName);
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 JS;
 
-        return response($sw, 200)
-            ->header('Content-Type', 'application/javascript')
-            ->header('Service-Worker-Allowed', '/' . $restaurant->slug . '/');
-    }
+    return response($sw, 200)
+        ->header('Content-Type', 'application/javascript')
+        ->header('Service-Worker-Allowed', '/' . $restaurant->slug . '/');
+}
 }

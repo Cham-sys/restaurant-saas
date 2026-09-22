@@ -158,7 +158,23 @@ class ThemesTable
                     }),
 
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->before(function (Theme $record, DeleteAction $action): void {
+                        // 1. التحقق من عدم استخدام الثيم من مطاعم
+                        if ($record->restaurants()->count() > 0) {
+                            Notification::make()
+                                ->title('لا يمكن حذف الثيم')
+                                ->body('هذا الثيم مرتبط بمطاعم حالية، قم بتغيير ثيم المطاعم أولاً.')
+                                ->danger()
+                                ->send();
+
+                            $action->cancel();
+                            return;
+                        }
+
+                        // 2. حذف المجلد الفيزيائي والسجل معاً
+                        app(ThemeUploadService::class)->delete($record);
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

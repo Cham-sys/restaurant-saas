@@ -194,40 +194,50 @@ class ThemeUploadService
      * حذف ثيم بالكامل
      */
     public function cloneTheme(Theme $theme, ?string $customName = null): array
-    {
-        $sourceDir = $this->themesPath.'/'.$theme->folder_name;
+{
+    $sourceDir = $this->themesPath.'/'.$theme->folder_name;
 
-        if (! File::isDirectory($sourceDir)) {
-            return ['success' => false, 'message' => 'مجلد الثيم الأصلي غير موجود.'];
-        }
-
-        $newName = trim((string) ($customName ?: $theme->name.' نسخة'));
-        $folderName = $this->resolveFolderName($newName === '' ? $theme->folder_name.'-copy' : $newName);
-        $targetDir = $this->themesPath.'/'.$folderName;
-
-        if (File::isDirectory($targetDir)) {
-            return ['success' => false, 'message' => 'يوجد بالفعل ثيم بنفس الاسم.'];
-        }
-
-        File::copyDirectory($sourceDir, $targetDir);
-
-        $json = $theme->loadThemeJson() ?? [];
-        $newTheme = Theme::create([
-            'name' => $newName,
-            'slug' => Str::slug($newName) ?: $folderName,
-            'author' => $json['author'] ?? $theme->author,
-            'version' => $json['version'] ?? $theme->version,
-            'description' => $json['description'] ?? $theme->description,
-            'folder_name' => $folderName,
-            'preview_image' => $theme->preview_image,
-            'default_settings' => $json['default_settings'] ?? $theme->default_settings,
-            'allowed_variables' => $json['allowed_variables'] ?? $theme->allowed_variables,
-            'is_active' => false,
-            'is_default' => false,
-        ]);
-
-        return ['success' => true, 'message' => 'تم نسخ الثيم بنجاح.', 'theme' => $newTheme];
+    if (! File::isDirectory($sourceDir)) {
+        return ['success' => false, 'message' => 'مجلد الثيم الأصلي غير موجود.'];
     }
+
+    $newName = trim((string) ($customName ?: $theme->name.' نسخة'));
+    $folderName = $this->resolveFolderName($newName === '' ? $theme->folder_name.'-copy' : $newName);
+    $targetDir = $this->themesPath.'/'.$folderName;
+
+    if (File::isDirectory($targetDir)) {
+        return ['success' => false, 'message' => 'يوجد بالفعل ثيم بنفس الاسم.'];
+    }
+
+    File::copyDirectory($sourceDir, $targetDir);
+
+    // 👈 تحديث ملف theme.json داخل المجلد المنسوخ لمنع تعارض المزامنة
+    $jsonPath = $targetDir.'/theme.json';
+    if (File::exists($jsonPath)) {
+        $jsonContent = json_decode(File::get($jsonPath), true) ?? [];
+        $jsonContent['name'] = $newName;
+        $jsonContent['slug'] = Str::slug($newName) ?: $folderName;
+        File::put($jsonPath, json_encode($jsonContent, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    $json = $this->readThemeJson($targetDir) ?? [];
+
+    $newTheme = Theme::create([
+        'name' => $newName,
+        'slug' => Str::slug($newName) ?: $folderName,
+        'author' => $json['author'] ?? $theme->author,
+        'version' => $json['version'] ?? $theme->version,
+        'description' => $json['description'] ?? $theme->description,
+        'folder_name' => $folderName,
+        'preview_image' => $theme->preview_image,
+        'default_settings' => $json['default_settings'] ?? $theme->default_settings,
+        'allowed_variables' => $json['allowed_variables'] ?? $theme->allowed_variables,
+        'is_active' => false,
+        'is_default' => false,
+    ]);
+
+    return ['success' => true, 'message' => 'تم نسخ الثيم بنجاح.', 'theme' => $newTheme];
+}
 
     public function delete(Theme $theme): array
     {

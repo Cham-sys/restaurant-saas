@@ -9,20 +9,26 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    /**
+     * عرض محتويات السلة
+     */
     public function index($slug)
     {
-        // جلب بيانات المطعم لعرضها في الهيدر والفوتر
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
-
-        // جلب محتويات السلة من الجلسة
-        $cart = session('cart', []);
+        
+        // 1. استخدام مفتاح جلسة فريد لكل مطعم
+        $sessionKey = 'cart_' . $restaurant->id;
+        $cart = session($sessionKey, []);
+        
         $products = [];
         $total = 0;
 
-        // حساب تفاصيل كل منتج في السلة
         foreach ($cart as $id => $details) {
-            $product = Product::where('restaurant_id', $restaurant->id)->find($id);
-            if ($product) {
+            // 2. جلب المنتج مباشرة (يمكن إضافة شرط للتأكد من أنه ينتمي للمطعم كأمان إضافي)
+            $product = Product::find($id);
+            
+            // تأكد أن المنتج موجود وأنه ينتمي لهذا المطعم تحديداً
+            if ($product && $product->restaurant_id == $restaurant->id) {
                 $products[] = [
                     'product' => $product,
                     'qty' => $details['qty'],
@@ -32,6 +38,7 @@ class CartController extends Controller
                 $total += $product->price * $details['qty'];
             }
         }
+        
         $themeName = ThemeHelper::getThemePath($restaurant);
 
         return view("themes.{$themeName}.cart.cart", compact('restaurant', 'products', 'total'));
@@ -49,21 +56,16 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
+        // التأكد أن المنتج ينتمي للمطعم الحالي ومتاح
         $product = Product::where('restaurant_id', $restaurant->id)
             ->where('is_available', true)
             ->findOrFail($request->product_id);
-        $cart = session('cart', []);
 
-        $cartHasAnotherRestaurantProduct = Product::whereIn('id', array_keys($cart))
-            ->where('restaurant_id', '!=', $restaurant->id)
-            ->exists();
+        // 3. استخدام مفتاح الجلسة الخاص بهذا المطعم فقط
+        $sessionKey = 'cart_' . $restaurant->id;
+        $cart = session($sessionKey, []);
 
-        if ($cartHasAnotherRestaurantProduct) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يمكن جمع منتجات مطعمين في سلة واحدة',
-            ], 422);
-        }
+        // (تم حذف التحقق من وجود مطاعم أخرى لأنه لم يعد ضرورياً مع فصل جلسات السلة)
 
         $productId = $product->id;
         $quantity = $request->quantity;
@@ -74,26 +76,27 @@ class CartController extends Controller
             $cart[$productId] = ['qty' => $quantity];
         }
 
-        session(['cart' => $cart]);
+        // حفظ السلة الخاصة بالمطعم فقط
+        session([$sessionKey => $cart]);
 
-        // --- إضافة جديدة: بناء محتوى السلة المصغرة لإرجاعه للواجهة ---
+        // --- بناء محتوى السلة المصغرة ---
         $total = 0;
         $cartHtml = '';
         $count = 0;
 
         foreach ($cart as $id => $details) {
-            $product = Product::where('restaurant_id', $restaurant->id)->find($id);
-            if ($product) {
+            $cartProduct = Product::find($id);
+            if ($cartProduct && $cartProduct->restaurant_id == $restaurant->id) {
                 $count += $details['qty'];
-                $total += $product->price * $details['qty'];
-                $imageUrl = $product->image ? asset('storage/'.$product->image) : 'https://via.placeholder.com/50';
+                $total += $cartProduct->price * $details['qty'];
+                $imageUrl = $cartProduct->image ? asset('storage/'.$cartProduct->image) : 'https://via.placeholder.com/50';
 
                 $cartHtml .= '
                     <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
                         <img src="'.$imageUrl.'" class="w-12 h-12 rounded-md object-cover">
                         <div class="flex-1">
-                            <h4 class="text-sm font-bold text-gray-800 truncate">'.$product->name.'</h4>
-                            <p class="text-xs text-primary font-bold">'.$product->price.' ر.س × '.$details['qty'].'</p>
+                            <h4 class="text-sm font-bold text-gray-800 truncate">'.$cartProduct->name.'</h4>
+                            <p class="text-xs text-primary font-bold">'.$cartProduct->price.' ر.س × '.$details['qty'].'</p>
                         </div>
                     </div>
                 ';
@@ -103,7 +106,6 @@ class CartController extends Controller
         if ($count === 0) {
             $cartHtml = '<div class="text-center py-8 text-gray-400 text-sm">السلة فارغة حالياً 🍽️</div>';
         }
-        // -------------------------------------------------------------
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -124,18 +126,21 @@ class CartController extends Controller
     public function update(Request $request, $slug)
     {
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $sessionKey = 'cart_' . $restaurant->id;
 
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
         ]);
 
+        // التأكد من أن المنتج ينتمي للمطعم
         Product::where('restaurant_id', $restaurant->id)->findOrFail($request->product_id);
-        $cart = session('cart', []);
+        
+        $cart = session($sessionKey, []);
 
         if (isset($cart[$request->product_id])) {
             $cart[$request->product_id]['qty'] = $request->quantity;
-            session(['cart' => $cart]);
+            session([$sessionKey => $cart]);
         }
 
         return redirect()->route('cart.index', $slug)->with('success', 'تم تحديث كمية المنتج');
@@ -147,17 +152,19 @@ class CartController extends Controller
     public function remove(Request $request, $slug)
     {
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $sessionKey = 'cart_' . $restaurant->id;
 
         $request->validate([
             'product_id' => 'required|exists:products,id',
         ]);
 
         Product::where('restaurant_id', $restaurant->id)->findOrFail($request->product_id);
-        $cart = session('cart', []);
+        
+        $cart = session($sessionKey, []);
 
         if (isset($cart[$request->product_id])) {
             unset($cart[$request->product_id]);
-            session(['cart' => $cart]);
+            session([$sessionKey => $cart]);
         }
 
         return redirect()->route('cart.index', $slug)->with('success', 'تم حذف المنتج من السلة');
