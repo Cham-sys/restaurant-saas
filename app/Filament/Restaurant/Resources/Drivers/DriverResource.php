@@ -21,7 +21,7 @@ class DriverResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-truck';
 
-    protected static ?string $navigationLabel = 'مندوبو التوصيل';
+    protected static ?string $navigationLabel = 'مندوب التوصيل';
 
     protected static string|UnitEnum|null $navigationGroup = 'التشغيل';
 
