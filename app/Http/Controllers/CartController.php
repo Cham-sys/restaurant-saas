@@ -15,18 +15,18 @@ class CartController extends Controller
     public function index($slug)
     {
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
-        
+
         // 1. استخدام مفتاح جلسة فريد لكل مطعم
-        $sessionKey = 'cart_' . $restaurant->id;
+        $sessionKey = 'cart_'.$restaurant->id;
         $cart = session($sessionKey, []);
-        
+
         $products = [];
         $total = 0;
 
         foreach ($cart as $id => $details) {
             // 2. جلب المنتج مباشرة (يمكن إضافة شرط للتأكد من أنه ينتمي للمطعم كأمان إضافي)
             $product = Product::find($id);
-            
+
             // تأكد أن المنتج موجود وأنه ينتمي لهذا المطعم تحديداً
             if ($product && $product->restaurant_id == $restaurant->id) {
                 $products[] = [
@@ -38,7 +38,7 @@ class CartController extends Controller
                 $total += $product->price * $details['qty'];
             }
         }
-        
+
         $themeName = ThemeHelper::getThemePath($restaurant);
 
         return view("themes.{$themeName}.cart.cart", compact('restaurant', 'products', 'total'));
@@ -62,7 +62,7 @@ class CartController extends Controller
             ->findOrFail($request->product_id);
 
         // 3. استخدام مفتاح الجلسة الخاص بهذا المطعم فقط
-        $sessionKey = 'cart_' . $restaurant->id;
+        $sessionKey = 'cart_'.$restaurant->id;
         $cart = session($sessionKey, []);
 
         // (تم حذف التحقق من وجود مطاعم أخرى لأنه لم يعد ضرورياً مع فصل جلسات السلة)
@@ -108,12 +108,34 @@ class CartController extends Controller
         }
 
         if ($request->wantsJson() || $request->ajax()) {
+            $items = collect($cart)
+                ->map(function (array $details, $id) use ($restaurant): ?array {
+                    $product = Product::where('restaurant_id', $restaurant->id)->find($id);
+
+                    if (! $product) {
+                        return null;
+                    }
+
+                    $quantity = (int) ($details['qty'] ?? 0);
+
+                    return [
+                        'name' => $product->name,
+                        'quantity' => $quantity,
+                        'price' => (float) $product->price,
+                        'subtotal' => (float) ($product->price * $quantity),
+                    ];
+                })
+                ->filter()
+                ->values();
+
             return response()->json([
                 'success' => true,
                 'message' => 'تمت إضافة المنتج للسلة بنجاح! 🛒',
                 'count' => $count,
-                'total' => number_format($total, 2),
-                'cart_html' => $cartHtml,
+                'subtotal' => $total,
+                'total' => $total,
+                'grand_total' => $total * 1.15,
+                'items' => $items,
             ]);
         }
 
@@ -126,7 +148,7 @@ class CartController extends Controller
     public function update(Request $request, $slug)
     {
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
-        $sessionKey = 'cart_' . $restaurant->id;
+        $sessionKey = 'cart_'.$restaurant->id;
 
         $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -135,7 +157,7 @@ class CartController extends Controller
 
         // التأكد من أن المنتج ينتمي للمطعم
         Product::where('restaurant_id', $restaurant->id)->findOrFail($request->product_id);
-        
+
         $cart = session($sessionKey, []);
 
         if (isset($cart[$request->product_id])) {
@@ -152,14 +174,14 @@ class CartController extends Controller
     public function remove(Request $request, $slug)
     {
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
-        $sessionKey = 'cart_' . $restaurant->id;
+        $sessionKey = 'cart_'.$restaurant->id;
 
         $request->validate([
             'product_id' => 'required|exists:products,id',
         ]);
 
         Product::where('restaurant_id', $restaurant->id)->findOrFail($request->product_id);
-        
+
         $cart = session($sessionKey, []);
 
         if (isset($cart[$request->product_id])) {

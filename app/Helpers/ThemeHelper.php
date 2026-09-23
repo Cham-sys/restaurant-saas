@@ -12,7 +12,11 @@ class ThemeHelper
      */
     public static function getThemePath(Restaurant $restaurant): string
     {
-        return $restaurant->theme->folder_name ?? 'burger-theme';
+        $folderName = $restaurant->theme?->folder_name;
+
+        return $folderName && is_dir(resource_path("views/themes/{$folderName}"))
+            ? $folderName
+            : 'burger-theme';
     }
 
     /**

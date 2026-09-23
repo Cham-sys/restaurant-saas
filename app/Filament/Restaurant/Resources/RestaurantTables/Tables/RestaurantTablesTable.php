@@ -26,7 +26,7 @@ class RestaurantTablesTable
                 // 1. عمود صورة الـ QR
                 ImageColumn::make('qr_code_image')
                     ->label('صورة QR')
-                    ->getStateUsing(fn ($record) => 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($record->qrUrl()))
+                    ->getStateUsing(fn ($record) => 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($record->qrUrl()))
                     ->square(),
 
                 // 2. عمود رابط الـ QR
@@ -53,10 +53,10 @@ class RestaurantTablesTable
                     ->label('معاينة الـ QR')
                     ->icon('heroicon-o-qr-code')
                     ->color('warning')
-                    ->modalHeading(fn ($record) => 'رمز QR للطاولة: ' . $record->number)
+                    ->modalHeading(fn ($record) => 'رمز QR للطاولة: '.$record->number)
                     ->modalContent(fn ($record) => new HtmlString('
                         <div class="flex flex-col items-center justify-center p-4 text-center">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' . urlencode($record->qrUrl()) . '" class="rounded-lg shadow-md mb-3"/>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data='.urlencode($record->qrUrl()).'" class="rounded-lg shadow-md mb-3"/>
                             <p class="text-sm text-gray-500">امسح الكود لتجربة المنيو والمشاهدة بنفس شكل الجوال</p>
                         </div>
                     '))
@@ -65,6 +65,16 @@ class RestaurantTablesTable
 
                 // زر التعديل الأصلي
                 EditAction::make(),
+                Action::make('openMenu')
+                    ->label('فتح المنيو')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->url(fn ($record): string => $record->qrUrl())
+                    ->openUrlInNewTab(),
+                Action::make('printQr')
+                    ->label('طباعة QR')
+                    ->icon('heroicon-o-printer')
+                    ->url(fn ($record): string => route('restaurant.table.qr', $record))
+                    ->openUrlInNewTab(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

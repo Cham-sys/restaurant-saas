@@ -39,8 +39,9 @@ class RestaurantTable extends Model
     {
         $path = route('restaurant.table.menu', [$this->restaurant->slug, $this->qr_token], false);
 
-        return request()->getSchemeAndHttpHost().$path;
+        return rtrim((string) config('app.url'), '/').$path;
     }
+
     protected static function boot()
     {
         parent::boot();

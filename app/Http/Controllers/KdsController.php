@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ThemeHelper;
 use App\Models\Order;
+use App\Models\Restaurant;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 
 class KdsController extends Controller
 {
@@ -13,10 +14,14 @@ class KdsController extends Controller
      */
     public function index($slug)
     {
-        $restaurant = \App\Models\Restaurant::where('slug', $slug)->firstOrFail();
-        $themePath = \App\Helpers\ThemeHelper::getThemePath($restaurant);
-        $orderCollection = Order::with('items')->where('restaurant_id', $restaurant->id)->whereIn('status', ['pending', 'preparing'])->get();
-        return view("themes.{$themePath}.pages.kds-board", compact('restaurant' , 'orderCollection'));
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $themePath = ThemeHelper::getThemePath($restaurant);
+        $orderCollection = Order::with(['items', 'restaurantTable', 'driver'])
+            ->where('restaurant_id', $restaurant->id)
+            ->whereIn('status', ['pending', 'preparing'])
+            ->get();
+
+        return view("themes.{$themePath}.pages.kds-board", compact('restaurant', 'orderCollection'));
     }
 
     /**
@@ -26,11 +31,11 @@ class KdsController extends Controller
     {
         // 1. التحقق من صحة الحالة المجهزة
         $request->validate([
-            'status' => 'required|in:new,preparing,ready,completed'
+            'status' => 'required|in:new,preparing,ready,completed',
         ]);
 
         // 2. البحث عن الطلب وتحديث حالته
-        $order = Order::Where('tracking_code' ,$orderId)->first();
+        $order = Order::Where('tracking_code', $orderId)->first();
         $order->status = $request->status;
         $order->save();
 
@@ -38,7 +43,7 @@ class KdsController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث حالة الطلب بنجاح',
-            'status'  => $order->status
+            'status' => $order->status,
         ]);
     }
 }
