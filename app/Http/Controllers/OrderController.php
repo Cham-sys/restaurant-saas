@@ -24,6 +24,7 @@ class OrderController extends Controller
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
         $order = Order::where('restaurant_id', $restaurant->id)
             ->where('tracking_code', $code)
+            ->with('invoice')
             ->firstOrFail();
 
         $themePath = ThemeHelper::getThemePath($restaurant);
@@ -36,6 +37,7 @@ class OrderController extends Controller
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
         $order = Order::where('restaurant_id', $restaurant->id)
             ->where('tracking_code', $code)
+            ->with(['invoice', 'restaurantTable'])
             ->firstOrFail();
 
         return response()->json([
@@ -55,9 +57,9 @@ class OrderController extends Controller
     public function checkout($slug)
     {
         $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
-        
+
         // ✅ التعديل الأول: قراءة السلة الخاصة بهذا المطعم فقط
-        $sessionKey = 'cart_' . $restaurant->id;
+        $sessionKey = 'cart_'.$restaurant->id;
         $cart = session($sessionKey, []);
 
         // إذا كانت السلة فارغة نعيد المستخدم للقائمة
@@ -113,7 +115,7 @@ class OrderController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => [$table ? 'nullable' : 'required', 'string', 'max:20'],
             'address' => 'nullable|string|max:1000',
             'latitude' => [$table ? 'nullable' : 'required', 'numeric', 'between:-90,90'],
             'longitude' => [$table ? 'nullable' : 'required', 'numeric', 'between:-180,180'],
@@ -123,10 +125,10 @@ class OrderController extends Controller
             'coupon_id' => 'nullable|exists:coupons,id',
             'coupon_code' => 'nullable|string',
         ]);
-        dd($slug , $request ,$restaurant);
-        $sessionKey = 'cart_' . $restaurant->id;
+
+        $sessionKey = 'cart_'.$restaurant->id;
         $cart = session($sessionKey, []);
-        
+
         if (empty($cart)) {
             return redirect()->back()->with('error', 'لا يمكن إتمام طلب فارغ');
         }
@@ -217,8 +219,8 @@ class OrderController extends Controller
             'delivery_city' => $restaurant->city,
             'delivery_fee' => $table ? 0 : $deliveryFee,
             'subtotal' => $subtotal,
-            'discount' => $offerDiscount, 
-            'coupon_discount' => $couponDiscount, 
+            'discount' => $offerDiscount,
+            'coupon_discount' => $couponDiscount,
             'offer_id' => $appliedOfferId,
             'coupon_id' => $appliedCouponId,
             'coupon_code' => $appliedCouponCode,
@@ -231,7 +233,7 @@ class OrderController extends Controller
             'device_token' => $deviceToken,
             'tracking_code' => 'ORD-'.strtoupper(Str::random(6)),
         ]);
-        Cookie::queue('order_device_token_' . $order->id, $deviceToken, 60 * 24 * 7);
+        Cookie::queue('order_device_token_'.$order->id, $deviceToken, 60 * 24 * 7);
         // حفظ عناصر الطلب
         foreach ($itemsData as $item) {
             $product = $products->get($item['product_id']);
@@ -262,9 +264,9 @@ class OrderController extends Controller
         // ✅ التعديل الثالث: حذف سلة هذا المطعم فقط بعد نجاح الطلب
         session()->forget($sessionKey);
         session()->forget(['restaurant_table_id', 'restaurant_table_restaurant_id']);
-        
+
         event(new OrderCreated($order));
-        
+
         return redirect()->route('order.success', [$slug, $order->tracking_code]);
     }
 
@@ -422,6 +424,7 @@ class OrderController extends Controller
             ->where('tracking_code', $code)
             ->firstOrFail();
         $themePath = ThemeHelper::getThemePath($restaurant);
+
         return view("themes.{$themePath}.cart.success", compact('restaurant', 'order'));
     }
 }

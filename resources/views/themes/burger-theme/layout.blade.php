@@ -193,11 +193,28 @@
                     
                     <!-- Quick Cart Preview (Dropdown) -->
                     <div class="relative group">
+                        @php
+                            $restaurantCart = session('cart_'.$restaurant->id, []);
+                            $restaurantCartCount = 0;
+                            $restaurantCartTotal = 0;
+                            $restaurantCartItems = [];
+
+                            foreach ($restaurantCart as $cartId => $cartDetails) {
+                                $cartProduct = \App\Models\Product::where('restaurant_id', $restaurant->id)->find($cartId);
+                                $cartQuantity = (int) ($cartDetails['qty'] ?? 0);
+
+                                if ($cartProduct && $cartQuantity > 0) {
+                                    $restaurantCartCount += $cartQuantity;
+                                    $restaurantCartTotal += $cartProduct->price * $cartQuantity;
+                                    $restaurantCartItems[] = ['product' => $cartProduct, 'quantity' => $cartQuantity];
+                                }
+                            }
+                        @endphp
                         <button class="btn-primary px-4 md:px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg relative hover:shadow-xl transition">
                             <span class="text-xl">🛒</span>
                             <span class="font-bold hidden sm:inline">السلة</span>
                             <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                                {{ count(session('cart', [])) }}
+                                {{ $restaurantCartCount }}
                             </span>
                         </button>
 
@@ -205,19 +222,19 @@
                         <div class="cart-dropdown absolute left-0 top-full mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
                             <div class="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-800 text-sm">منتجاتك المختارة</h3>
-                                <span id="mini-cart-count" class="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{{ count(session('cart', [])) }} عناصر</span>
+                                <span id="mini-cart-count" class="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{{ $restaurantCartCount }} عناصر</span>
                             </div>
                             
                             <div id="mini-cart-items" class="max-h-64 overflow-y-auto p-2 space-y-2">
-                                @if(session('cart') && count(session('cart')) > 0)
-                                    @foreach(session('cart') as $id => $details)
-                                        @php $product = \App\Models\Product::find($id); @endphp
+                                @if($restaurantCartItems)
+                                    @foreach($restaurantCartItems as $cartItem)
+                                        @php $product = $cartItem['product']; @endphp
                                         @if($product)
                                             <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
                                                 <img src="{{ media_url($product->image) ?? 'https://via.placeholder.com/50?text=food' }}" class="w-12 h-12 rounded-md object-cover bg-gray-100">
                                                 <div class="flex-1 min-w-0">
                                                     <h4 class="text-sm font-bold text-gray-800 truncate">{{ $product->name }}</h4>
-                                                    <p class="text-xs text-primary font-bold">{{ number_format($product->price, 2) }} ر.س × {{ $details['qty'] }}</p>
+                                                    <p class="text-xs text-primary font-bold">{{ number_format($product->price, 2) }} ر.س × {{ $cartItem['quantity'] }}</p>
                                                 </div>
                                             </div>
                                         @endif
@@ -236,13 +253,7 @@
                                     <span>المجموع:</span>
                                     <span id="mini-cart-total">
                                         @php
-                                            $total = 0;
-                                            if(session('cart')) {
-                                                foreach(session('cart') as $id => $details) {
-                                                    $p = \App\Models\Product::find($id);
-                                                    if($p) $total += $p->price * $details['qty'];
-                                                }
-                                            }
+                                            $total = $restaurantCartTotal;
                                         @endphp
                                         {{ number_format($total, 2) }} ر.س
                                     </span>
@@ -540,14 +551,34 @@
             if (miniCount) miniCount.innerText = `${data.count} عناصر`;
             if (miniCartTotal) miniCartTotal.innerText = `${data.total} ر.س`;
 
-            if (miniCartItems && data.cart_html) {
+            if (miniCartItems && data.items) {
                 miniCartItems.style.opacity = '0';
                 setTimeout(() => {
-                    miniCartItems.innerHTML = data.cart_html;
+                    miniCartItems.innerHTML = data.items.length
+                        ? data.items.map(item => `<div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition"><div class="flex-1 min-w-0"><h4 class="text-sm font-bold text-gray-800 truncate">${escapeCartHtml(item.name)}</h4><p class="text-xs text-primary font-bold">${Number(item.price).toFixed(2)} ر.س × ${item.quantity}</p></div><p class="text-xs font-bold text-gray-700">${Number(item.subtotal).toFixed(2)} ر.س</p></div>`).join('')
+                        : '<div class="text-center py-8 px-4"><div class="text-4xl mb-2">🍽️</div><p class="text-gray-500 text-sm font-medium">السلة فارغة حالياً</p><p class="text-gray-400 text-xs mt-1">ابدأ بإضافة منتجات لذيذة</p></div>';
                     miniCartItems.style.opacity = '1';
                     miniCartItems.style.transition = 'opacity 0.3s ease-in-out';
                 }, 150);
             }
+
+            const menuCount = document.getElementById('cart-count');
+            const menuTotal = document.getElementById('cart-total');
+            const menuTotalDetail = document.getElementById('cart-total-detail');
+            const menuItems = document.getElementById('cart-items-list');
+
+            if (menuCount) menuCount.innerText = `${data.count} وجبة في الطلب`;
+            if (menuTotal) menuTotal.innerText = `${Number(data.grand_total ?? data.total).toFixed(2)} ر.س`;
+            if (menuTotalDetail) menuTotalDetail.innerText = Number(data.grand_total ?? data.total).toFixed(2);
+            if (menuItems && data.items) {
+                menuItems.innerHTML = data.items.length
+                    ? data.items.map(item => `<div class="flex items-center justify-between gap-3 border-b border-gray-100 py-2 last:border-0"><div class="min-w-0"><p class="truncate font-bold text-gray-800">${escapeCartHtml(item.name)}</p><p class="text-xs text-gray-500">${item.quantity} × ${Number(item.price).toFixed(2)} ر.س</p></div><p class="font-bold text-primary">${Number(item.subtotal).toFixed(2)} ر.س</p></div>`).join('')
+                    : '<p class="py-2 text-center text-sm text-gray-500">لم تتم إضافة وجبات بعد</p>';
+            }
+        }
+
+        function escapeCartHtml(value) {
+            return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[character]));
         }
 
         // 7. نظام الإشعارات (Toast) المتطور

@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\OrderStatusChanged;
 use App\Helpers\ThemeHelper;
-use App\Models\Order;
 use App\Models\Product;
 use App\Models\Restaurant;
 use App\Models\Review;
-use Illuminate\Http\Request;
 
 class RestaurantController extends Controller
 {
@@ -25,7 +22,6 @@ class RestaurantController extends Controller
         return view('restaurant.dashboard', compact('settings'));
     }
 
-    
     public function home(string $slug)
     {
         // تحميل المطعم مع الثيم
@@ -99,6 +95,40 @@ class RestaurantController extends Controller
             ? $restaurant->tables()->find(session('restaurant_table_id'))
             : null;
 
-        return view("themes.{$themePath}.pages.menu", compact('restaurant', 'categories', 'table'));
+        $cart = session('cart_'.$restaurant->id, []);
+        $cartProducts = Product::where('restaurant_id', $restaurant->id)
+            ->whereIn('id', array_keys($cart))
+            ->get()
+            ->keyBy('id');
+        $cartItems = [];
+        $cartCount = 0;
+        $cartSubtotal = 0;
+
+        foreach ($cart as $productId => $details) {
+            $product = $cartProducts->get($productId);
+            $quantity = (int) ($details['qty'] ?? 0);
+
+            if ($product && $quantity > 0) {
+                $cartItems[] = [
+                    'product' => $product,
+                    'quantity' => $quantity,
+                    'subtotal' => $product->price * $quantity,
+                ];
+                $cartCount += $quantity;
+                $cartSubtotal += $product->price * $quantity;
+            }
+        }
+
+        $cartTotal = $cartSubtotal * 1.15;
+
+        return view("themes.{$themePath}.pages.menu", compact(
+            'restaurant',
+            'categories',
+            'table',
+            'cartItems',
+            'cartCount',
+            'cartSubtotal',
+            'cartTotal',
+        ));
     }
 }

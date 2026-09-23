@@ -24,8 +24,8 @@
                         <input type="text" name="name" required class="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
-                        <input type="tel" name="phone" id="customer-phone" required class="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف @if(!$table)<span class="text-red-500">*</span>@else<span class="text-gray-400"> (اختياري)</span>@endif</label>
+                        <input type="tel" name="phone" id="customer-phone" @required(!$table) class="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
                     </div>
                     @if(!$table)<div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">العنوان بالتفصيل</label>

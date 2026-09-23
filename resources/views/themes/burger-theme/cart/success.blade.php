@@ -81,6 +81,19 @@
                         </a>
                     </div>
                 </div>
+
+                @if($order->invoice)
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4 text-center">
+                        <p class="text-sm text-gray-500">رقم الفاتورة</p>
+                        <p class="text-xl font-black text-gray-900">{{ $order->invoice->invoice_number }}</p>
+                    </div>
+                @endif
+
+                @if($order->restaurantTable)
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 text-center text-orange-900">
+                        طلب الطاولة <strong>{{ $order->restaurantTable->number }}</strong>
+                    </div>
+                @endif
                 <!-- معلومات الخصم (إذا تم تطبيقه) -->
                 @if($order->discount_amount > 0)
                     <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
@@ -122,6 +135,13 @@
                         الرئيسية
                     </a>
                 </div>
+
+                @if($order->restaurantTable)
+                    <a href="{{ route('restaurant.table.menu', [$restaurant->slug, $order->restaurantTable->qr_token]) }}"
+                       class="mt-3 block rounded-xl border border-orange-200 bg-orange-50 py-3 text-center font-bold text-orange-800">
+                        العودة إلى منيو الطاولة
+                    </a>
+                @endif
 
             </div>
         </div>
